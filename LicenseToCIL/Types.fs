@@ -8,4 +8,3 @@ type IL(generator : ILGenerator) =
     member __.Generator = generator
 
 type Op<'stackin, 'stackout> = S<'stackin> -> IL -> S<'stackout>
-
