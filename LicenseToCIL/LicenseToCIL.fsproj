@@ -23,6 +23,8 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
     <DocumentationFile>bin\Debug\LicenseToCIL.XML</DocumentationFile>
+    <OtherFlags>
+    </OtherFlags>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -46,6 +48,7 @@
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Stack.fs" />
     <Compile Include="Types.fs" />
+    <Compile Include="Op.fsi" />
     <Compile Include="Op.fs" />
   </ItemGroup>
   <PropertyGroup>
