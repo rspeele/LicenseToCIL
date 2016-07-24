@@ -1,4 +1,4 @@
-module LicenseToCIL.Op
+module LicenseToCIL.Ops
 open LicenseToCIL
 open LicenseToCIL.Stack
 open FSharp.Quotations
@@ -10,7 +10,12 @@ type Local = LocalBuilder
 type Label<'stack> = Label of Label
 
 type LabelDefinition = internal | LabelDefinition
+type LocalDefinition<'a> = internal | LocalDefinition
 
+val inline combine : Op<'i, 'm> -> (unit -> Op<'m, 'e>) -> Op<'i, 'e>
+
+[<GeneralizableValue>]
+val deflocal<'a> : LocalDefinition<'a>
 val deflabel : LabelDefinition
 val mark : 'x Label -> Op<'x, 'x>
 
@@ -251,5 +256,6 @@ val tail : Op<'x, 'x>
 val throw : Op<'x S, 'y>
 val unbox'val : ty : Type -> Op<'x S, 'x S>
 val unbox'any : ty : Type -> Op<'x S, 'x S>
+val inline zero : Op<'x, 'x>
 
 

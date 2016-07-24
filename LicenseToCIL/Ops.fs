@@ -1,4 +1,4 @@
-﻿module LicenseToCIL.Op
+﻿module LicenseToCIL.Ops
 open LicenseToCIL
 open LicenseToCIL.Stack
 open FSharp.Quotations
@@ -39,6 +39,9 @@ let inline private binop0 opcode stack (il : IL) =
 let inline private unop opcode stack (il : IL) =
     il.Generator.Emit(opcode)
     stack |> popped |> pushed
+
+let inline combine (op1 : Op<'inp, 'mid>) (op2 : unit -> Op<'mid, 'out>) : Op<'inp, 'out> =
+    fun stack il -> op2 () (op1 stack il) il
 
 ////////////////////////////////////////
 // Calls
@@ -113,6 +116,8 @@ let newobj5 cons : Op<'x S S S S S, 'x S> = newobj'x cons
 ////////////////////////////////////////
 // Primitive stack operations
 ////////////////////////////////////////
+
+let inline zero (stack : 'x S) (il : IL) = stack
 
 let nop stack = nops stack <| fun il -> il.Emit(OpCodes.Nop)
 
@@ -353,6 +358,11 @@ let ldind'u4 stack = unop OpCodes.Ldind_U4 stack
 ////////////////////////////////////////
 // Locals
 ////////////////////////////////////////
+
+type LocalDefinition<'a> = internal | LocalDefinition
+
+[<GeneralizableValue>]
+let deflocal<'a> = LocalDefinition : LocalDefinition<'a>
     
 let ldloc (local : LocalBuilder) stack =
     pushes stack <| fun il ->
