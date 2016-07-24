@@ -19,12 +19,14 @@ val call1 : MethodInfo -> Op<'x S, 'x S>
 val call2 : MethodInfo -> Op<'x S S, 'x S>
 val call3 : MethodInfo -> Op<'x S S S, 'x S>
 val call4 : MethodInfo -> Op<'x S S S S, 'x S>
+val call5 : MethodInfo -> Op<'x S S S S S, 'x S>
 
 val call0'void : MethodInfo -> Op<'x, 'x> 
 val call1'void : MethodInfo -> Op<'x S, 'x>
 val call2'void : MethodInfo -> Op<'x S S, 'x>
 val call3'void : MethodInfo -> Op<'x S S S, 'x>
 val call4'void : MethodInfo -> Op<'x S S S S, 'x>
+val call5'void : MethodInfo -> Op<'x S S S S S, 'x>
 
 val calli'x : Op<'x S, 'y>
 val calli0 : Op<'x S, 'x S>
@@ -32,6 +34,7 @@ val calli1 : Op<'x S S, 'x S>
 val calli2 : Op<'x S S S, 'x S>
 val calli3 : Op<'x S S S S, 'x S>
 val calli4 : Op<'x S S S S S, 'x S>
+val calli5 : Op<'x S S S S S S, 'x S>
 
 val calli'void : Op<'x S, 'y>
 val calli0'void : Op<'x S, 'x S>
@@ -39,6 +42,7 @@ val calli1'void : Op<'x S S, 'x S>
 val calli2'void : Op<'x S S S, 'x S>
 val calli3'void : Op<'x S S S S, 'x S>
 val calli4'void : Op<'x S S S S S, 'x S>
+val calli5'void : Op<'x S S S S S S, 'x S>
 
 val callvirt'x : MethodInfo -> Op<'x, 'y>
 val callvirt0 : MethodInfo -> Op<'x, 'x S> 
@@ -46,12 +50,26 @@ val callvirt1 : MethodInfo -> Op<'x S, 'x S>
 val callvirt2 : MethodInfo -> Op<'x S S, 'x S>
 val callvirt3 : MethodInfo -> Op<'x S S S, 'x S>
 val callvirt4 : MethodInfo -> Op<'x S S S S, 'x S>
+val callvirt5 : MethodInfo -> Op<'x S S S S S, 'x S>
 
 val callvirt0'void : MethodInfo -> Op<'x, 'x> 
 val callvirt1'void : MethodInfo -> Op<'x S, 'x>
 val callvirt2'void : MethodInfo -> Op<'x S S, 'x>
 val callvirt3'void : MethodInfo -> Op<'x S S S, 'x>
 val callvirt4'void : MethodInfo -> Op<'x S S S S, 'x>
+val callvirt5'void : MethodInfo -> Op<'x S S S S S, 'x>
+
+val calla1 : Expr<'a -> 'b> -> Op<'x S, 'x S>
+val calla2 : Expr<'a -> 'b -> 'c> -> Op<'x S S, 'x S>
+val calla3 : Expr<'a -> 'b -> 'c -> 'd> -> Op<'x S S, 'x S>
+val calla4 : Expr<'a -> 'b -> 'c -> 'd -> 'e> -> Op<'x S S, 'x S>
+val calla5 : Expr<'a -> 'b -> 'c -> 'd -> 'e -> 'f> -> Op<'x S S, 'x S>
+
+val calla1'void : Expr<'a -> 'b> -> Op<'x S, 'x>
+val calla2'void : Expr<'a -> 'b -> 'c> -> Op<'x S S, 'x>
+val calla3'void : Expr<'a -> 'b -> 'c -> 'd> -> Op<'x S S, 'x>
+val calla4'void : Expr<'a -> 'b -> 'c -> 'd -> 'e> -> Op<'x S S, 'x>
+val calla5'void : Expr<'a -> 'b -> 'c -> 'd -> 'e -> 'f> -> Op<'x S S, 'x>
 
 val add : Op<'x S S, 'x S>
 val add'ovf : Op<'x S S, 'x S>
