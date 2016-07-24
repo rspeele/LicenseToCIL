@@ -12,6 +12,7 @@ type Label<'stack> = Label of Label
 type LabelDefinition = internal | LabelDefinition
 
 val deflabel : LabelDefinition
+val mark : 'x Label -> Op<'x, 'x>
 
 val call'x : MethodInfo -> Op<'x, 'y>
 val call0 : MethodInfo -> Op<'x, 'x S> 
@@ -59,17 +60,13 @@ val callvirt3'void : MethodInfo -> Op<'x S S S, 'x>
 val callvirt4'void : MethodInfo -> Op<'x S S S S, 'x>
 val callvirt5'void : MethodInfo -> Op<'x S S S S S, 'x>
 
-val calla1 : Expr<'a -> 'b> -> Op<'x S, 'x S>
-val calla2 : Expr<'a -> 'b -> 'c> -> Op<'x S S, 'x S>
-val calla3 : Expr<'a -> 'b -> 'c -> 'd> -> Op<'x S S, 'x S>
-val calla4 : Expr<'a -> 'b -> 'c -> 'd -> 'e> -> Op<'x S S, 'x S>
-val calla5 : Expr<'a -> 'b -> 'c -> 'd -> 'e -> 'f> -> Op<'x S S, 'x S>
-
-val calla1'void : Expr<'a -> 'b> -> Op<'x S, 'x>
-val calla2'void : Expr<'a -> 'b -> 'c> -> Op<'x S S, 'x>
-val calla3'void : Expr<'a -> 'b -> 'c -> 'd> -> Op<'x S S, 'x>
-val calla4'void : Expr<'a -> 'b -> 'c -> 'd -> 'e> -> Op<'x S S, 'x>
-val calla5'void : Expr<'a -> 'b -> 'c -> 'd -> 'e -> 'f> -> Op<'x S S, 'x>
+val newobj'x : ConstructorInfo -> Op<'x, 'y S>
+val newobj0 : ConstructorInfo -> Op<'x, 'x S>
+val newobj1 : ConstructorInfo -> Op<'x S, 'x S>
+val newobj2 : ConstructorInfo -> Op<'x S S, 'x S>
+val newobj3 : ConstructorInfo -> Op<'x S S S, 'x S>
+val newobj4 : ConstructorInfo -> Op<'x S S S S, 'x S>
+val newobj5 : ConstructorInfo -> Op<'x S S S S S, 'x S>
 
 val add : Op<'x S S, 'x S>
 val add'ovf : Op<'x S S, 'x S>
@@ -99,7 +96,7 @@ val blt'un : 'x Label -> Op<'x S S, 'x>
 val blt'un's : 'x Label -> Op<'x S S, 'x>
 val bne'un : 'x Label -> Op<'x S S, 'x>
 val bne'un's : 'x Label -> Op<'x S S, 'x>
-val box : valueTy : Type -> Op<'x S, 'x S>
+val box'val : valueTy : Type -> Op<'x S, 'x S>
 val br : 'x Label -> Op<'x, 'y>
 val br's : 'x Label -> Op<'x, 'y>
 val brfalse : 'x Label -> Op<'x S, 'x>
@@ -107,13 +104,14 @@ val brfalse's : 'x Label -> Op<'x S, 'x>
 val brtrue : 'x Label -> Op<'x S, 'x>
 val brtrue's : 'x Label -> Op<'x S, 'x>
 val castclass : toTy : Type -> Op<'x S, 'x S>
-val ceq : Op<'x S S, 'x>
-val cgt : Op<'x S S, 'x>
-val cgt'un : Op<'x S S, 'x>
+val ceq : Op<'x S S, 'x S>
+val cgt : Op<'x S S, 'x S>
+val cgt'un : Op<'x S S, 'x S>
 val ckfinite : Op<'x S, 'x>
-val clt : Op<'x S S, 'x>
-val clt'un : Op<'x S S, 'x>
-val constrained' : ty : Type -> Op<'x, 'x>
+val clt : Op<'x S S, 'x S>
+val clt'un : Op<'x S S, 'x S>
+val constrained : ty : Type -> Op<'x, 'x>
+val constrained : ty : Type -> Op<'x, 'x>
 val conv'i : Op<'x S, 'x S>
 val conv'i1 : Op<'x S, 'x S>
 val conv'i2 : Op<'x S, 'x S>
@@ -148,15 +146,15 @@ val conv'u2 : Op<'x S, 'x S>
 val conv'u4 : Op<'x S, 'x S>
 val conv'u8 : Op<'x S, 'x S>
 val cpblk : Op<'x S S S, 'x>
-val cpobj : Op<'x S S, 'x>
+val cpobj : ty : Type -> Op<'x S S, 'x>
 val div : Op<'x S S, 'x S>
 val div'un : Op<'x S S, 'x S>
 val dup : Op<'x S, 'x S S>
 val endfilter : Op<'x S, 'x>
 val endfinally : Op<'x, 'x>
 val initblk : Op<'x S S S, 'x>
-val initobj : Op<'x S, 'x>
-val isinst : Op<'x S, 'x S>
+val initobj : ty : Type -> Op<'x S, 'x>
+val isinst : ty : Type -> Op<'x S, 'x S>
 val jmp : MethodInfo -> Op<E, E>
 val ldarg : int -> Op<'x, 'x S>
 val ldarga : int -> Op<'x, 'x S>
@@ -176,7 +174,7 @@ val ldelem'ref : Op<'x S S, 'x S>
 val ldelem'u1 : Op<'x S S, 'x S>
 val ldelem'u2 : Op<'x S S, 'x S>
 val ldelem'u4 : Op<'x S S, 'x S>
-val ldelema : Op<'x S S, 'x S>
+val ldelema : ty : Type -> Op<'x S S, 'x S>
 val ldfld : FieldInfo -> Op<'x S, 'x S>
 val ldflda : FieldInfo -> Op<'x S, 'x S>
 val ldftn : MethodInfo -> Op<'x, 'x S>
@@ -195,27 +193,25 @@ val ldlen : Op<'x S, 'x S>
 val ldloc : Local -> Op<'x, 'x S>
 val ldloca : Local -> Op<'x, 'x S>
 val ldnull : Op<'x, 'x S>
-val ldobj : Op<'x S, 'x S>
-val ldsfld : Op<'x, 'x S>
-val ldsflda : Op<'x, 'x S>
+val ldobj : ty : Type -> Op<'x S, 'x S>
+val ldsfld : FieldInfo -> Op<'x, 'x S>
+val ldsflda : FieldInfo -> Op<'x, 'x S>
 val ldstr : str : string -> Op<'x, 'x S>
 val ldtoken : ty : Type -> Op<'x, 'x S>
 val ldvirtftn : MethodInfo -> Op<'x S, 'x S>
 val leave : E Label -> Op<'y, 'z>
 val leave's : E Label -> Op<'y, 'z>
 val localloc : Op<'x S, 'x S>
-val mark : 'x Label -> Op<'x, 'x>
 val mkrefany : ty : Type -> Op<'x S, 'x S>
 val mul : Op<'x S S, 'x S>
 val mul'ovf : Op<'x S S, 'x S>
 val mul'ovf'un : Op<'x S S, 'x S>
 val neg : Op<'x S, 'x S>
 val newarr : elemTy : Type -> Op<'x S, 'x S>
-val newobj : cons : ConstructorInfo -> Op<'x, 'x S>
 val nop : Op<'x, 'x>
 val pop : Op<'x S, 'x>
 val refanytype : Op<'x S, 'x S>
-val refanyval : Op<'x S, 'x S>
+val refanyval : ty : Type -> Op<'x S, 'x S>
 val rem : Op<'x S S, 'x S>
 val rem'un : Op<'x S S, 'x S>
 val ret : Op<E S, E>
@@ -244,8 +240,8 @@ val stind'i8 : Op<'x S S, 'x>
 val stind'r4 : Op<'x S S, 'x>
 val stind'r8 : Op<'x S S, 'x>
 val stind'ref : Op<'x S S, 'x>
-val stloc : int -> Op<'x S, 'x>
-val stobj : Op<'x S S, 'x>
+val stloc : Local -> Op<'x S, 'x>
+val stobj : Type -> Op<'x S S, 'x>
 val stsfld : FieldInfo -> Op<'x S, 'x>
 val sub : Op<'x S S, 'x S>
 val sub'ovf : Op<'x S S, 'x S>
@@ -253,6 +249,7 @@ val sub'ovf'un : Op<'x S S, 'x S>
 val switch : 'x Label seq -> Op<'x S, 'x>
 val tail : Op<'x, 'x>
 val throw : Op<'x S, 'y>
-val unbox : ty : Type -> Op<'x S, 'x S>
+val unbox'val : ty : Type -> Op<'x S, 'x S>
 val unbox'any : ty : Type -> Op<'x S, 'x S>
+
 
