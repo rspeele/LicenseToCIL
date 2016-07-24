@@ -161,6 +161,29 @@ let conv'r8 stack = unop OpCodes.Conv_R8 stack
 // Arrays
 ////////////////////////////////////////
 
+let newarr (elemTy : Type) stack (il : IL) =
+    il.Generator.Emit(OpCodes.Newarr, elemTy)
+    stack |> popped |> pushed
+
+let ldlen stack =
+    pushes stack <| fun il -> il.Emit(OpCodes.Ldlen)
+
+/// [array,index] -> [value]
+let ldelem (elemTy : Type) stack = pops2pushes1 stack <| fun il -> il.Emit(OpCodes.Ldelem, elemTy)
+let ldelem'i stack = binop OpCodes.Ldelem_I stack
+let ldelem'i1 stack = binop OpCodes.Ldelem_I1 stack
+let ldelem'i2 stack = binop OpCodes.Ldelem_I2 stack
+let ldelem'i4 stack = binop OpCodes.Ldelem_I4 stack
+let ldelem'i8 stack = binop OpCodes.Ldelem_I8 stack
+let ldelem'u1 stack = binop OpCodes.Ldelem_U1 stack
+let ldelem'u2 stack = binop OpCodes.Ldelem_U2 stack
+let ldelem'u4 stack = binop OpCodes.Ldelem_U4 stack
+let ldelem'u8 stack = binop OpCodes.Ldelem_I8 stack
+let ldelem'r4 stack = binop OpCodes.Ldelem_R4 stack
+let ldelem'r8 stack = binop OpCodes.Ldelem_R8 stack
+let ldelem'ref stack = binop OpCodes.Ldelem_Ref stack
+let ldelema (elemTy : Type) stack = pops2pushes1 stack <| fun il -> il.Emit(OpCodes.Ldelema, elemTy)
+
 /// [array,index,value] -> []
 let stelem (ty : Type) stack = pops3 stack <| fun il -> il.Emit(OpCodes.Stelem, ty)
 let stelem'i stack = pops3 stack <| fun il -> il.Emit(OpCodes.Stelem_I)
@@ -172,21 +195,31 @@ let stelem'r4 stack = pops3 stack <| fun il -> il.Emit(OpCodes.Stelem_R4)
 let stelem'r8 stack = pops3 stack <| fun il -> il.Emit(OpCodes.Stelem_R8)
 let stelem'ref stack = pops3 stack <| fun il -> il.Emit(OpCodes.Stelem_Ref)
 
-/// [array,index] -> [value]
-let ldelem (ty : Type) stack = pops2pushes1 stack <| fun il -> il.Emit(OpCodes.Ldelem, ty)
-let ldelem'i stack = pops2pushes1 stack <| fun il -> il.Emit(OpCodes.Ldelem_I)
-let ldelem'i1 stack = pops2pushes1 stack <| fun il -> il.Emit(OpCodes.Ldelem_I1)
-let ldelem'i2 stack = pops2pushes1 stack <| fun il -> il.Emit(OpCodes.Ldelem_I2)
-let ldelem'i4 stack = pops2pushes1 stack <| fun il -> il.Emit(OpCodes.Ldelem_I4)
-let ldelem'i8 stack = pops2pushes1 stack <| fun il -> il.Emit(OpCodes.Ldelem_I8)
-let ldelem'u1 stack = pops2pushes1 stack <| fun il -> il.Emit(OpCodes.Ldelem_U1)
-let ldelem'u2 stack = pops2pushes1 stack <| fun il -> il.Emit(OpCodes.Ldelem_U2)
-let ldelem'u4 stack = pops2pushes1 stack <| fun il -> il.Emit(OpCodes.Ldelem_U4)
-let ldelem'u8 stack = pops2pushes1 stack <| fun il -> il.Emit(OpCodes.Ldelem_I8)
-let ldelem'r4 stack = pops2pushes1 stack <| fun il -> il.Emit(OpCodes.Ldelem_R4)
-let ldelem'r8 stack = pops2pushes1 stack <| fun il -> il.Emit(OpCodes.Ldelem_R8)
-let ldelem'ref stack = pops2pushes1 stack <| fun il -> il.Emit(OpCodes.Ldelem_Ref)
-let ldelema (ty : Type) stack = pops2pushes1 stack <| fun il -> il.Emit(OpCodes.Ldelema, ty)
+////////////////////////////////////////
+// Arguments
+////////////////////////////////////////
+
+let ldarg i stack =
+    pushes stack <| fun il ->
+    match i with
+    | 0 -> il.Emit(OpCodes.Ldarg_0)
+    | 1 -> il.Emit(OpCodes.Ldarg_1)
+    | 2 -> il.Emit(OpCodes.Ldarg_2)
+    | 3 -> il.Emit(OpCodes.Ldarg_3)
+    | s when s < 256 -> il.Emit(OpCodes.Ldarg_S, byte s)
+    | i -> il.Emit(OpCodes.Ldarg, i)
+
+let ldarga i stack =
+    pushes stack <| fun il ->
+    match i with
+    | s when s < 256 -> il.Emit(OpCodes.Ldarga_S, byte s)
+    | i -> il.Emit(OpCodes.Ldarga, i)
+
+let starg i stack =
+    pops stack <| fun il ->
+    match i with
+    | s when s < 256 -> il.Emit(OpCodes.Starg_S, byte s)
+    | i -> il.Emit(OpCodes.Starg, i)
 
 ////////////////////////////////////////
 // Locals
