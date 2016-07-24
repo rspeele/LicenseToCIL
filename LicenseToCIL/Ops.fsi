@@ -258,4 +258,7 @@ val unbox'val : ty : Type -> Op<'x S, 'x S>
 val unbox'any : ty : Type -> Op<'x S, 'x S>
 val inline zero : Op<'x, 'x>
 
+// missing opcodes:
+// volatile
+// unaligned
 
