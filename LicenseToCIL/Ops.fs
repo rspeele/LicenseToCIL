@@ -516,3 +516,5 @@ let initblk stack = pops3 stack <| fun il -> il.Emit(OpCodes.Initblk)
 
 let constrained (ty : Type) stack = nops stack <| fun il -> il.Emit(OpCodes.Constrained, ty)
 let tail stack = nops stack <| fun il -> il.Emit(OpCodes.Tailcall)
+let unaligned (stack : 'x S S) = nops stack <| fun il -> il.Emit(OpCodes.Unaligned)
+let volatile' (stack : 'x S S) = nops stack <| fun il -> il.Emit(OpCodes.Volatile)
