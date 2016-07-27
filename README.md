@@ -123,7 +123,7 @@ need to operate on the same number of stack elements. This requirement is type-c
 Here's an example that simply decrements its argument down to 0 in a loop:
 
 ```
-let sum =
+let busyLoop =
     cil {
         let! loop = deflabel
         let! exit = deflabel
@@ -140,6 +140,25 @@ let sum =
                          //                                       |
         yield mark exit  // <-------------------------------------+
         yield ret'void
+    }
+```
+
+### Locals
+
+If your code needs a local variable, you can get one with `deflocal`, much like `deflabel`.
+`deflocal` takes a `Type` object for the type of the variable.
+
+Here's an example that swaps the top two `int` elements on the stack.
+
+```
+let swapInts =
+    cil {
+        let! tmp1 = deflocal typeof<int>
+        let! tmp2 = deflocal typeof<int>
+        yield stloc tmp1
+        yield stloc tmp2
+        yield ldloc tmp1
+        yield ldloc tmp2
     }
 ```
 
