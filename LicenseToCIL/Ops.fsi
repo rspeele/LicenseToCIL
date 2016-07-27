@@ -10,13 +10,13 @@ type Local = LocalBuilder
 type Label<'stack> = Label of Label
 
 type LabelDefinition = internal | LabelDefinition
-type LocalDefinition<'a> = internal | LocalDefinition
+type LocalDefinition = internal | LocalDefinition of Type
 
 /// Sequence together two stack operations.
 val inline combine : Op<'i, 'm> -> (unit -> Op<'m, 'e>) -> Op<'i, 'e>
 
-/// Define a new local, e.g. `let! loc = deflocal<int>`.
-val deflocal<'a> : LocalDefinition<'a>
+/// Define a new local, e.g. `let! loc = deflocal typeof<int>`.
+val deflocal : Type -> LocalDefinition
 /// Define a new label, e.g. `let! lbl = deflabel`.
 val deflabel : LabelDefinition
 

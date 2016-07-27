@@ -14,9 +14,9 @@ type CILBuilder() =
             let lbl = il.Generator.DefineLabel()
             con (Ops.Label lbl) stack il
 
-    member __.Bind(_ : Ops.LocalDefinition<'a>, con : Ops.Local -> Op<'i, 'o>) : Op<'i, 'o> =
+    member __.Bind(Ops.LocalDefinition ty, con : Ops.Local -> Op<'i, 'o>) : Op<'i, 'o> =
         fun stack il ->
-            let loc = il.Generator.DeclareLocal(typeof<'a>)
+            let loc = il.Generator.DeclareLocal(ty)
             con loc stack il
 
     member this.While(predicate : unit -> bool, iter : unit -> Op<'x, 'x>)
