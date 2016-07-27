@@ -7,6 +7,11 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "LicenseToCIL", "LicenseToCI
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "LicenseToCIL.Examples", "LicenseToCIL.Examples\LicenseToCIL.Examples.fsproj", "{70934925-9A2A-4BBF-BF4B-93A6EA6B86B9}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0AD3504E-4FA8-45CA-86CB-1A5037C09ABB}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
