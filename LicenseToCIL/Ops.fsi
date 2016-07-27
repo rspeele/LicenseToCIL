@@ -24,58 +24,103 @@ val deflabel : LabelDefinition
 /// Mark the position of a label.
 val mark : 'x Label -> Op<'x, 'x>
 
+/// [? -> ?] Call method taking an unknown number of arguments.
+/// Not recommended -- favor exact variants.
 val call'x : MethodInfo -> Op<'x, 'y>
+/// [_ -> _, value] Call method taking zero arguments and returning a value.
 val call0 : MethodInfo -> Op<'x, 'x S> 
+/// [_, arg0 -> _, value] Call method taking 1 argument and returning a value.
 val call1 : MethodInfo -> Op<'x S, 'x S>
+/// [_, arg0, arg1 -> _, value] Call method taking 2 arguments and returning a value.
 val call2 : MethodInfo -> Op<'x S S, 'x S>
+/// [_, arg0, arg1, arg2 -> _, value] Call method taking 3 arguments and returning a value.
 val call3 : MethodInfo -> Op<'x S S S, 'x S>
+/// [_, arg0, arg1. arg2, arg3 -> _, value] Call method taking 4 arguments and returning a value.
 val call4 : MethodInfo -> Op<'x S S S S, 'x S>
+/// [_, arg0, arg1, arg2, arg3, arg4 -> _, value] Call method taking 5 arguments and returning a value.
 val call5 : MethodInfo -> Op<'x S S S S S, 'x S>
 
+/// [_ -> _] Call void method taking zero arguments.
 val call0'void : MethodInfo -> Op<'x, 'x> 
+/// [_, arg0 -> _] Call void method taking 1 argument.
 val call1'void : MethodInfo -> Op<'x S, 'x>
+/// [_, arg0, arg1 -> _] Call void method taking 2 arguments.
 val call2'void : MethodInfo -> Op<'x S S, 'x>
+/// [_, arg0, arg1, arg2 -> _] Call void method taking 3 arguments.
 val call3'void : MethodInfo -> Op<'x S S S, 'x>
+/// [_, arg0, arg1, arg2, arg3 -> _] Call void method taking 4 arguments.
 val call4'void : MethodInfo -> Op<'x S S S S, 'x>
+/// [_, arg0, arg1, arg2, arg3, arg4 -> _] Call void method taking 5 arguments.
 val call5'void : MethodInfo -> Op<'x S S S S S, 'x>
 
+/// [?, ptr -> ?] Indirectly call method taking an unknown number of arguments.
+/// Not recommended -- favor exact variants.
 val calli'x : Op<'x S, 'y>
+/// [_, ptr -> _, value] Indirectly call method taking zero arguments and returning a value.
 val calli0 : Op<'x S, 'x S>
+/// [_, arg0, ptr -> _, value] Indirectly call method taking 1 argument and returning a value.
 val calli1 : Op<'x S S, 'x S>
+/// [_, arg0, arg1, ptr -> _, value] Indirectly call method taking 2 arguments and returning a value.
 val calli2 : Op<'x S S S, 'x S>
+/// [_, arg0, arg1, arg2, ptr -> _, value] Indirectly call method taking 3 arguments and returning a value.
 val calli3 : Op<'x S S S S, 'x S>
+/// [_, arg0, arg1, arg2, arg3, ptr -> _, value] Indirectly call method taking 4 arguments and returning a value.
 val calli4 : Op<'x S S S S S, 'x S>
+/// [_, arg0, arg1, arg2, arg3, arg4, ptr -> _, value] Indirectly call method taking 5 arguments and returning a value.
 val calli5 : Op<'x S S S S S S, 'x S>
 
-val calli'void : Op<'x S, 'y>
+/// [_, ptr -> _] Indirectly call void method taking zero arguments.
 val calli0'void : Op<'x S, 'x S>
+/// [_, arg0, ptr -> _] Indirectly call void method taking 1 argument.
 val calli1'void : Op<'x S S, 'x S>
+/// [_, arg0, arg1, ptr -> _] Indirectly call void method taking 2 arguments.
 val calli2'void : Op<'x S S S, 'x S>
+/// [_, arg0, arg1, arg2, ptr -> _] Indirectly call void method taking 3 arguments.
 val calli3'void : Op<'x S S S S, 'x S>
+/// [_, arg0, arg1, arg2, arg3, ptr -> _] Indirectly call void method taking 4 arguments.
 val calli4'void : Op<'x S S S S S, 'x S>
+/// [_, arg0, arg1, arg2, arg3, arg4, ptr -> _] Indirectly call void method taking 5 arguments.
 val calli5'void : Op<'x S S S S S S, 'x S>
 
+/// [? -> ?] Indirectly call virtual method taking an unknown number of arguments.
+/// Not recommended -- favor exact variants.
 val callvirt'x : MethodInfo -> Op<'x, 'y>
-val callvirt0 : MethodInfo -> Op<'x, 'x S> 
+/// [_, obj -> _, value] Call virtual method taking 1 (instance) argument and returning a value.
 val callvirt1 : MethodInfo -> Op<'x S, 'x S>
+/// [_, obj, arg0 -> _, value] Call virtual method taking 2 arguments and returning a value.
 val callvirt2 : MethodInfo -> Op<'x S S, 'x S>
+/// [_, obj, arg0, arg1 -> _, value] Call virtual method taking 3 arguments and returning a value.
 val callvirt3 : MethodInfo -> Op<'x S S S, 'x S>
+/// [_, obj, arg0, arg1, arg2 -> _, value] Call virtual method taking 4 arguments and returning a value.
 val callvirt4 : MethodInfo -> Op<'x S S S S, 'x S>
+/// [_, obj, arg0, arg1, arg2, arg3 -> _, value] Call virtual method taking 5 arguments and returning a value.
 val callvirt5 : MethodInfo -> Op<'x S S S S S, 'x S>
 
-val callvirt0'void : MethodInfo -> Op<'x, 'x> 
+/// [_, obj -> _] Call virtual void method taking 1 (instance) argument.
 val callvirt1'void : MethodInfo -> Op<'x S, 'x>
+/// [_, obj, arg0 -> _] Call virtual void method taking 2 arguments.
 val callvirt2'void : MethodInfo -> Op<'x S S, 'x>
+/// [_, obj, arg0, arg1 -> _] Call virtual void method taking 3 arguments.
 val callvirt3'void : MethodInfo -> Op<'x S S S, 'x>
+/// [_, obj, arg0, arg1, arg2 -> _] Call virtual void method taking 4 arguments.
 val callvirt4'void : MethodInfo -> Op<'x S S S S, 'x>
+/// [_, obj, arg0, arg1, arg2, arg3 -> _] Call virtual void method taking 5 arguments.
 val callvirt5'void : MethodInfo -> Op<'x S S S S S, 'x>
 
+/// [? -> ?] Call constructor taking an unknown number of arguments.
+/// Not recommended -- favor exact variants.
 val newobj'x : ConstructorInfo -> Op<'x, 'y S>
+/// [_ -> _, object] Call constructor taking zero arguments.
 val newobj0 : ConstructorInfo -> Op<'x, 'x S>
+/// [_, arg0 -> _, object] Call constructor taking 1 argument.
 val newobj1 : ConstructorInfo -> Op<'x S, 'x S>
+/// [_, arg0, arg1 -> _, object] Call constructor taking 2 arguments.
 val newobj2 : ConstructorInfo -> Op<'x S S, 'x S>
+/// [_, arg0, arg1, arg2 -> _, object] Call constructor taking 3 arguments.
 val newobj3 : ConstructorInfo -> Op<'x S S S, 'x S>
+/// [_, arg0, arg1, arg2, arg3 -> _, object] Call constructor taking 4 arguments.
 val newobj4 : ConstructorInfo -> Op<'x S S S S, 'x S>
+/// [_, arg0, arg1, arg2, arg3, arg4 -> _, object] Call constructor taking 5 arguments.
 val newobj5 : ConstructorInfo -> Op<'x S S S S S, 'x S>
 
 /// [_, value1, value2 --> _, result] Add two values, returning a new value.

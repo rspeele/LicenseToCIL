@@ -76,7 +76,6 @@ let calli3 : Op<'x S S S S, 'x S> = fun st -> calli'x st
 let calli4 : Op<'x S S S S S, 'x S> = fun st -> calli'x st
 let calli5 : Op<'x S S S S S S, 'x S> = fun st -> calli'x st
 
-let calli'void : Op<'x S, 'y> = fun st -> calli'x st
 let calli0'void : Op<'x S, 'x S> = fun st -> calli'x st
 let calli1'void : Op<'x S S, 'x S> = fun st -> calli'x st
 let calli2'void : Op<'x S S S, 'x S> = fun st -> calli'x st
@@ -88,14 +87,12 @@ let callvirt'x (meth : MethodInfo) (stack : 'x S) (il : IL) =
     il.Generator.Emit(OpCodes.Callvirt, meth)
     null : 'y S
 
-let callvirt0 meth : Op<'x, 'x S> = callvirt'x meth
 let callvirt1 meth : Op<'x S, 'x S> = callvirt'x meth
 let callvirt2 meth : Op<'x S S, 'x S> = callvirt'x meth
 let callvirt3 meth : Op<'x S S S, 'x S> = callvirt'x meth
 let callvirt4 meth : Op<'x S S S S, 'x S> = callvirt'x meth
 let callvirt5 meth : Op<'x S S S S S, 'x S> = callvirt'x meth
 
-let callvirt0'void meth : Op<'x, 'x> = callvirt'x meth
 let callvirt1'void meth : Op<'x S, 'x> = callvirt'x meth
 let callvirt2'void meth : Op<'x S S, 'x> = callvirt'x meth
 let callvirt3'void meth : Op<'x S S S, 'x> = callvirt'x meth
