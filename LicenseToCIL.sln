@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.25123.0
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "LicenseToCIL", "LicenseToCIL\LicenseToCIL.fsproj", "{FE96A24B-9624-485C-B265-D83D2012F08E}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "LicenseToCIL.Examples", "LicenseToCIL.Examples\LicenseToCIL.Examples.fsproj", "{70934925-9A2A-4BBF-BF4B-93A6EA6B86B9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{FE96A24B-9624-485C-B265-D83D2012F08E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FE96A24B-9624-485C-B265-D83D2012F08E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FE96A24B-9624-485C-B265-D83D2012F08E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{70934925-9A2A-4BBF-BF4B-93A6EA6B86B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{70934925-9A2A-4BBF-BF4B-93A6EA6B86B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{70934925-9A2A-4BBF-BF4B-93A6EA6B86B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{70934925-9A2A-4BBF-BF4B-93A6EA6B86B9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
