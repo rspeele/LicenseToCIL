@@ -16,7 +16,6 @@ type LocalDefinition<'a> = internal | LocalDefinition
 val inline combine : Op<'i, 'm> -> (unit -> Op<'m, 'e>) -> Op<'i, 'e>
 
 /// Define a new local, e.g. `let! loc = deflocal<int>`.
-[<GeneralizableValue>]
 val deflocal<'a> : LocalDefinition<'a>
 /// Define a new label, e.g. `let! lbl = deflabel`.
 val deflabel : LabelDefinition

@@ -358,7 +358,6 @@ let ldind'u4 stack = unop OpCodes.Ldind_U4 stack
 
 type LocalDefinition<'a> = internal | LocalDefinition
 
-[<GeneralizableValue>]
 let deflocal<'a> = LocalDefinition : LocalDefinition<'a>
     
 let ldloc (local : LocalBuilder) stack =
