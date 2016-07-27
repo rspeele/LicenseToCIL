@@ -14,6 +14,10 @@ type LocalDefinition = internal | LocalDefinition of Type
 
 /// Sequence together two stack operations.
 val inline combine : Op<'i, 'm> -> (unit -> Op<'m, 'e>) -> Op<'i, 'e>
+/// Emit no instructions and retain stack state.
+val inline zero : Op<'x, 'x>
+/// Force the stack state to appear as desired to the type checker.
+val inline pretend<'x, 'y> : S<'x> -> IL -> S<'y>
 
 /// Define a new local, e.g. `let! loc = deflocal typeof<int>`.
 val deflocal : Type -> LocalDefinition
@@ -490,6 +494,4 @@ val unbox'val : valueTy : Type -> Op<'x S, 'x S>
 val unbox'any : ty : Type -> Op<'x S, 'x S>
 /// [_, addr --> _, addr] Subsequent pointer reference is volatile.
 val volatile' : Op<'x S, 'x S>
-/// Emit no instructions and retain stack state.
-val inline zero : Op<'x, 'x>
 

@@ -43,6 +43,11 @@ let inline private unop opcode stack (il : IL) =
 let inline combine (op1 : Op<'inp, 'mid>) (op2 : unit -> Op<'mid, 'out>) : Op<'inp, 'out> =
     fun stack il -> op2 () (op1 stack il) il
 
+let inline zero (stack : 'x S) (il : IL) = stack
+
+let inline pretend<'x, 'y> (stack : 'x S) (il : IL) : 'y S =
+    null : 'y S
+
 ////////////////////////////////////////
 // Calls
 ////////////////////////////////////////
@@ -113,8 +118,6 @@ let newobj5 cons : Op<'x S S S S S, 'x S> = newobj'x cons
 ////////////////////////////////////////
 // Primitive stack operations
 ////////////////////////////////////////
-
-let inline zero (stack : 'x S) (il : IL) = stack
 
 let nop stack = nops stack <| fun il -> il.Emit(OpCodes.Nop)
 
