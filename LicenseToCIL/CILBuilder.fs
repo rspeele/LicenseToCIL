@@ -3,7 +3,7 @@ module LicenseToCIL.Builder
 open System
 
 type CILBuilder() =
-    member inline __.Zero = Ops.zero
+    member inline __.Zero() = Ops.zero
     member inline __.Yield(op : Op<_, _>) = op
     member inline __.Combine(op1, op2) = Ops.combine op1 op2
     member inline __.Delay(x : unit -> Op<_, _>) = x
