@@ -479,8 +479,8 @@ let castclass (ty : Type) stack = pops1pushes1 stack <| fun il -> il.Emit(OpCode
 let isinst (ty : Type) stack = pops1pushes1 stack <| fun il -> il.Emit(OpCodes.Isinst, ty)
 let refanyval (ty : Type) stack = pops1pushes1 stack <| fun il -> il.Emit(OpCodes.Refanyval, ty)
 let refanytype stack = pops1pushes1 stack <| fun il -> il.Emit(OpCodes.Refanytype)
-let initobj (ty : Type) stack = pops stack <| fun il -> il.Emit(OpCodes.Initobj)
-let mkrefany (ty : Type) stack = pops1pushes1 stack <| fun il -> il.Emit(OpCodes.Mkrefany)
+let initobj (ty : Type) stack = pops stack <| fun il -> il.Emit(OpCodes.Initobj, ty)
+let mkrefany (ty : Type) stack = pops1pushes1 stack <| fun il -> il.Emit(OpCodes.Mkrefany, ty)
 
 ////////////////////////////////////////
 // Exception stuff
