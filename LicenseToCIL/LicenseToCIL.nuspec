@@ -2,14 +2,14 @@
 <package >
   <metadata>
     <id>LicenseToCIL</id>
-    <version>0.1.3</version>
+    <version>0.1.4</version>
     <authors>Robert Peele</authors>
     <owners>Robert Peele</owners>
     <licenseUrl>https://raw.githubusercontent.com/rspeele/LicenseToCIL/master/README.md</licenseUrl>
     <projectUrl>https://github.com/rspeele/LicenseToCIL</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>IL generation library for F#</description>
-    <releaseNotes>Fix initobj and mkrefany.</releaseNotes>
+    <releaseNotes>Add support for temporary (reusable) locals.</releaseNotes>
     <copyright>Copyright 2016 Robert Peele</copyright>
     <tags>fsharp f# cil msil il emit reflection</tags>
   </metadata>
