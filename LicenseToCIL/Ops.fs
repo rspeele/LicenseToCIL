@@ -360,8 +360,10 @@ let ldind'u4 stack = unop OpCodes.Ldind_U4 stack
 ////////////////////////////////////////
 
 type LocalDefinition = internal | LocalDefinition of Type
+type LocalTemporary = internal | LocalTemporary of Type
 
 let deflocal ty = LocalDefinition ty
+let tmplocal ty = LocalTemporary ty
     
 let ldloc (local : LocalBuilder) stack =
     pushes stack <| fun il ->

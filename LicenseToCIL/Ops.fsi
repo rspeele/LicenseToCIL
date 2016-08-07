@@ -11,6 +11,7 @@ type Label<'stack> = Label of Label
 
 type LabelDefinition = internal | LabelDefinition
 type LocalDefinition = internal | LocalDefinition of Type
+type LocalTemporary = internal | LocalTemporary of Type
 
 /// Sequence together two stack operations.
 val inline combine : Op<'i, 'm> -> (unit -> Op<'m, 'e>) -> Op<'i, 'e>
@@ -21,6 +22,9 @@ val inline pretend<'x, 'y> : S<'x> -> IL -> S<'y>
 
 /// Define a new local, e.g. `let! loc = deflocal typeof<int>`.
 val deflocal : Type -> LocalDefinition
+/// Obtain a temporary local, e.g. `let! loc = tmplocal typeof<int>`.
+/// The local may contain an arbitrary previous value.
+val tmplocal : Type -> LocalTemporary
 /// Define a new label, e.g. `let! lbl = deflabel`.
 val deflabel : LabelDefinition
 

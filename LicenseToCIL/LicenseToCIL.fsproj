@@ -47,6 +47,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Stack.fs" />
+    <Compile Include="IL.fs" />
     <Compile Include="Types.fs" />
     <Compile Include="Ops.fsi" />
     <Compile Include="Ops.fs" />

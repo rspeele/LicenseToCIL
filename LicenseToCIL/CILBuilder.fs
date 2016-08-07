@@ -19,6 +19,14 @@ type CILBuilder() =
             let loc = il.Generator.DeclareLocal(ty)
             con loc stack il
 
+    member __.Bind(Ops.LocalTemporary ty, con : Ops.Local -> Op<'i, 'o>) : Op<'i, 'o> =
+        fun stack il ->
+            let loc, free = il.AllocateLocal(ty)
+            try
+                con loc stack il
+            finally
+                free()
+
     member this.While(predicate : unit -> bool, iter : unit -> Op<'x, 'x>)
         : Op<'x, 'x> =
         fun stack il ->
