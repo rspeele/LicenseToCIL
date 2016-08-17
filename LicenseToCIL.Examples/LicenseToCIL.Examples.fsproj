@@ -46,6 +46,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Factorial.fs" />
+    <Compile Include="Switches.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LicenseToCIL\LicenseToCIL.fsproj">

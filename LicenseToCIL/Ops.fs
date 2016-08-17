@@ -1,8 +1,6 @@
 ﻿module LicenseToCIL.Ops
 open LicenseToCIL
 open LicenseToCIL.Stack
-open FSharp.Quotations
-open FSharp.Quotations.Patterns
 open System
 open System.Reflection
 open System.Reflection.Emit

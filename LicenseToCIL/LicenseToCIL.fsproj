@@ -52,6 +52,7 @@
     <Compile Include="Ops.fsi" />
     <Compile Include="Ops.fs" />
     <Compile Include="CILBuilder.fs" />
+    <Compile Include="Switch.fs" />
     <Compile Include="Delegates.fs" />
   </ItemGroup>
   <PropertyGroup>
