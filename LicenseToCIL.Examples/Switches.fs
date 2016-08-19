@@ -109,27 +109,24 @@ type DigitEnum =
     | nine = 9
     | invalid = -1
 
-let stringSwitch =
+let stringSwitchBy meth name =
     cil {
         yield ldarg 0
-        yield StringSwitch.sensitive
+        yield meth
             [ for name, i in digits ->
                 name, cil { yield ldc'i4 i; yield ret }
             ] zero
         yield ldc'i4 -1
         yield ret
-    } |> toDelegate<Func<string, int>> "cilStringSwitch"
+    } |> toDelegate<Func<string, int>> name
 
-let stringSwitchCI =
-    cil {
-        yield ldarg 0
-        yield StringSwitch.insensitive
-            [ for name, i in digits ->
-                name, cil { yield ldc'i4 i; yield ret }
-            ] zero
-        yield ldc'i4 -1
-        yield ret
-    } |> toDelegate<Func<string, int>> "cilStringSwitchCI"
+let stringSwitch = stringSwitchBy StringSwitch.sensitive "cilStringSwitch"
+
+let stringSwitchCI = stringSwitchBy StringSwitch.insensitive "cilStringSwitchCI"
+
+let stringSwitchHash = stringSwitchBy StringSwitch.sensitiveByHash "cilStringSwitchHash"
+
+let stringSwitchHashCI = stringSwitchBy StringSwitch.insensitiveByHash "cilStringSwitchHashCI"
 
 let bench name f =
     let sw = new Stopwatch()
@@ -197,6 +194,7 @@ type TestSwitches() =
         let fs = bench "F#" fsStringSwitch
         let ifElse = bench "If/Else" stringSwitchIfElse.Invoke
         let gen = bench "Switch" stringSwitch.Invoke
+        let genH = bench "Switch Hash" stringSwitchHash.Invoke
         if gen > ifElse then failwith "Generated switch slower than if/else"
         if gen > fs then failwith "Generated switch slower than a match statement"
 
@@ -205,4 +203,5 @@ type TestSwitches() =
         let fs = benchCI "F#" fsStringSwitchCI
         let fsDict = benchCI "F# dict" fsStringSwitchDictCI
         let gen = benchCI "Switch" stringSwitchCI.Invoke
+        let genH = benchCI "Switch Hash" stringSwitchHashCI.Invoke
         if gen > fs then failwith "Generated switch slower than a match statement"
