@@ -50,10 +50,11 @@ type private SwitchGroup<'stackin, 'stackout> =
                         labels.[i] <- defaultCase
                     labels.[k] <- il.Generator.DefineLabel()
                     next <- k + 1
-            (cil {
-                yield ldc'i4 minimum
-                yield sub
-            }) null il |> ignore
+            if minimum <> 0 then
+                (cil {
+                    yield ldc'i4 minimum
+                    yield sub
+                }) null il |> ignore
             il.Generator.Emit(OpCodes.Switch, labels)
             (cil {
                 let defaultCase = Label defaultCase
