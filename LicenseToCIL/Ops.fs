@@ -60,6 +60,7 @@ let call2 meth : Op<'x S S, 'x S> = call'x meth
 let call3 meth : Op<'x S S S, 'x S> = call'x meth
 let call4 meth : Op<'x S S S S, 'x S> = call'x meth
 let call5 meth : Op<'x S S S S S, 'x S> = call'x meth
+let call6 meth : Op<'x S S S S S S, 'x S> = call'x meth
 
 let call0'void meth : Op<'x, 'x> = call'x meth
 let call1'void meth : Op<'x S, 'x> = call'x meth
@@ -67,6 +68,7 @@ let call2'void meth : Op<'x S S, 'x> = call'x meth
 let call3'void meth : Op<'x S S S, 'x> = call'x meth
 let call4'void meth : Op<'x S S S S, 'x> = call'x meth
 let call5'void meth : Op<'x S S S S S, 'x> = call'x meth
+let call6'void meth : Op<'x S S S S S S, 'x> = call'x meth
 
 let calli'x (stack : 'x S S) (il : IL) =
     il.Generator.Emit(OpCodes.Calli)

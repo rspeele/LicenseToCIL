@@ -1,10 +1,11 @@
 ﻿module LicenseToCIL.Examples.Switches
 open System
+open System.Diagnostics
 open LicenseToCIL
 open LicenseToCIL.Ops
 open Microsoft.VisualStudio.TestTools.UnitTesting
     
-let fancySwitch =
+let integerSwitch =
     cil {
         yield ldarg 0
         yield Switch.cases
@@ -25,12 +26,51 @@ let fancySwitch =
                 19, ldstr "nineteen"
             ] (ldstr "default")
         yield ret
-    } |> toDelegate<Func<int, string>> "cilSwitch"
+    } |> toDelegate<Func<int, string>> "cilIntegerSwitch"
+
+let digits =
+    [
+        "zero", 0
+        "one", 1
+        "two", 2
+        "three", 3
+        "four", 4
+        "five", 5
+        "six", 6
+        "seven", 7
+        "eight", 8
+        "nine", 9
+    ]
+
+let fsStringSwitch str =
+    match str with
+    | "zero" -> 0
+    | "one" -> 1
+    | "two" -> 2
+    | "three" -> 3
+    | "four" -> 4
+    | "five" -> 5
+    | "six" -> 6
+    | "seven" -> 7
+    | "eight" -> 8
+    | "nine" -> 9
+    | _ -> -1
+
+let stringSwitchSensitive =
+    cil {
+        yield ldarg 0
+        yield StringSwitch.sensitive
+            [ for name, i in digits ->
+                name, ldc'i4 i
+            ] (ldc'i4 -1)
+        yield ret
+    } |> toDelegate<Func<string, int>> "cilStringSwitchSensitive"
+    
 
 [<TestClass>]
 type TestSwitches() =
     [<TestMethod>]
-    member __.TestAll() =
+    member __.TestIntegerSwitch() =
         for input, expected in
             [
                 0, "default"
@@ -55,4 +95,25 @@ type TestSwitches() =
                 -102, "negative one hundred and two"
                 -103, "default"
                 -120, "default"
-            ] do Assert.AreEqual(expected, fancySwitch.Invoke(input))
+            ] do Assert.AreEqual(expected, integerSwitch.Invoke(input))
+
+    [<TestMethod>]
+    member __.TestStringSwitch() =
+        for input, expected in digits do
+            Assert.AreEqual(expected, stringSwitchSensitive.Invoke(input))
+
+    [<TestMethod>]
+    member __.TestStringSwitchPerformance() =
+        let bench name f =
+            let sw = new Stopwatch()
+            let arr = [| for str, d in digits -> String.Copy(str), d |]
+            sw.Start()
+            for i = 0 to 10 * 1000 * 1000 do
+                let str, d = arr.[i % arr.Length]
+                if f str <> d then failwith "broken"
+            sw.Stop()
+            printfn "%s took %dms" name sw.ElapsedMilliseconds
+            sw.ElapsedMilliseconds
+        let fs = bench "F#" fsStringSwitch
+        let gen = bench "Generated" stringSwitchSensitive.Invoke
+        if gen > fs then failwith "We're slower than a match statement"

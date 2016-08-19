@@ -1,9 +1,10 @@
 ﻿module LicenseToCIL.Switch
-open LicenseToCIL
-open LicenseToCIL.Stack
 open System
 open System.Reflection
 open System.Reflection.Emit
+open LicenseToCIL
+open LicenseToCIL.Stack
+open LicenseToCIL.Ops
 
 type private Case<'stackin, 'stackout> = int * Op<'stackin, 'stackout>
 
@@ -21,19 +22,19 @@ type private SwitchGroup<'stackin, 'stackout> =
         else this.IfElseCode
     member this.IfElseCode : Op<'stackin S, 'stackout> =
         cil {
-            let! exit = Ops.deflabel
+            let! exit = deflabel
             for key, code in this.Cases do
-                let! next = Ops.deflabel
-                yield Ops.dup
-                yield Ops.ldc'i4 key
-                yield Ops.bne'un next
-                yield Ops.pop
+                let! next = deflabel
+                yield dup
+                yield ldc'i4 key
+                yield bne'un next
+                yield pop
                 yield code
-                yield Ops.br exit
-                yield Ops.mark next
-            yield Ops.pop
+                yield br exit
+                yield mark next
+            yield pop
             yield this.Default
-            yield Ops.mark exit
+            yield mark exit
         }
     member this.SwitchCode : Op<'stackin S, 'stackout> =
         fun _ il ->
@@ -50,22 +51,22 @@ type private SwitchGroup<'stackin, 'stackout> =
                     labels.[k] <- il.Generator.DefineLabel()
                     next <- k + 1
             (cil {
-                yield Ops.ldc'i4 minimum
-                yield Ops.sub
+                yield ldc'i4 minimum
+                yield sub
             }) null il |> ignore
             il.Generator.Emit(OpCodes.Switch, labels)
             (cil {
-                let defaultCase = Ops.Label defaultCase
-                let exit = Ops.Label exit
-                yield Ops.br defaultCase
+                let defaultCase = Label defaultCase
+                let exit = Label exit
+                yield br defaultCase
                 for key, code in this.Cases do
                     let k = key - minimum
-                    yield Ops.mark (Ops.Label (labels.[k]))
+                    yield mark (Label (labels.[k]))
                     yield code
-                    yield Ops.br exit
-                yield Ops.mark defaultCase
+                    yield br exit
+                yield mark defaultCase
                 yield this.Default
-                yield Ops.mark exit
+                yield mark exit
             }) null il |> ignore
             null
             
@@ -107,16 +108,16 @@ type private SwitchTree<'stackin, 'stackout> =
         | Leaf group -> group.Code
         | Branch (left, pivot, right) ->
             cil {
-                let! exit = Ops.deflabel
-                let! gte = Ops.deflabel
-                yield Ops.dup
-                yield Ops.ldc'i4 pivot
-                yield Ops.bge gte
+                let! exit = deflabel
+                let! gte = deflabel
+                yield dup
+                yield ldc'i4 pivot
+                yield bge gte
                 yield left.Code()
-                yield Ops.br exit
-                yield Ops.mark gte
+                yield br exit
+                yield mark gte
                 yield right.Code()
-                yield Ops.mark exit
+                yield mark exit
             }
 
 let rec private switchTreeGuts (defaultCase : Op<_, _>) (groups : _ array) index count =

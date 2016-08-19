@@ -46,6 +46,8 @@ val call3 : MethodInfo -> Op<'x S S S, 'x S>
 val call4 : MethodInfo -> Op<'x S S S S, 'x S>
 /// [_, arg0, arg1, arg2, arg3, arg4 -> _, value] Call method taking 5 arguments and returning a value.
 val call5 : MethodInfo -> Op<'x S S S S S, 'x S>
+/// [_, arg0, arg1, arg2, arg3, arg4, arg5 -> _, value] Call method taking 6 arguments and returning a value.
+val call6 : MethodInfo -> Op<'x S S S S S S, 'x S>
 
 /// [_ -> _] Call void method taking zero arguments.
 val call0'void : MethodInfo -> Op<'x, 'x> 
@@ -59,6 +61,8 @@ val call3'void : MethodInfo -> Op<'x S S S, 'x>
 val call4'void : MethodInfo -> Op<'x S S S S, 'x>
 /// [_, arg0, arg1, arg2, arg3, arg4 -> _] Call void method taking 5 arguments.
 val call5'void : MethodInfo -> Op<'x S S S S S, 'x>
+/// [_, arg0, arg1, arg2, arg3, arg4, arg5 -> _] Call void method taking 6 arguments.
+val call6'void : MethodInfo -> Op<'x S S S S S S, 'x>
 
 /// [?, ptr -> ?] Indirectly call method taking an unknown number of arguments.
 /// Not recommended -- favor exact variants.
