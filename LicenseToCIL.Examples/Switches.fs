@@ -91,11 +91,11 @@ let stringSwitchSensitive =
         yield ldarg 0
         yield StringSwitch.sensitive
             [ for name, i in digits ->
-                name, ldc'i4 i
-            ] (ldc'i4 -1)
+                name, cil { yield ldc'i4 i; yield ret }
+            ] zero
+        yield ldc'i4 -1
         yield ret
     } |> toDelegate<Func<string, int>> "cilStringSwitchSensitive"
-    
 
 [<TestClass>]
 type TestSwitches() =
