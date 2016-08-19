@@ -75,6 +75,29 @@ let rec private stringsIfElse
         yield mark exit
     }
 
+let rec private stringsBinarySearch
+    culture
+    (input : Local)
+    (cases: StringCase<_, _> array)
+    (defaultCase : Op<_, _>) =
+    cil {
+        let! def = deflabel
+        let! exit = deflabel
+        for str, code in cases do
+            let! next = deflabel
+            yield ldstr str
+            yield ldloc input
+            yield ldc'i4 (int (stringComparison culture))
+            yield call3 StringMethods.compare3
+            yield brtrue next
+            yield code
+            yield br exit
+            yield mark next
+        yield mark def
+        yield defaultCase
+        yield mark exit
+    }
+
 let private scoreIndex (strings : string seq) i =
     let groups =
         strings
@@ -146,15 +169,10 @@ let private strings culture (cases : StringCase<_, _> seq) (defaultCase : Op<_, 
             cases
             |> Array.groupBy (fun (s, _) -> s.Length)
             |> Array.map (fun (len, strs) -> len, stringsOfLength culture str len strs defaultCase)
-        match byLen with
-        | [| _, code |] ->
-            yield stloc str
-            yield code
-        | byLen ->
-            yield dup
-            yield stloc str
-            yield call1 StringMethods.length
-            yield Switch.cases byLen defaultCase
+        yield dup
+        yield stloc str
+        yield call1 StringMethods.length
+        yield Switch.cases byLen defaultCase
     }
 
 /// Case-insensitively switch on strings.
