@@ -56,6 +56,19 @@ let fsStringSwitch str =
     | "nine" -> 9
     | _ -> -1
 
+let fsStringSwitchCI str =
+    if String.Equals(str, "zero", StringComparison.OrdinalIgnoreCase) then 0
+    elif String.Equals(str, "one", StringComparison.OrdinalIgnoreCase) then 1
+    elif String.Equals(str, "two", StringComparison.OrdinalIgnoreCase) then 2
+    elif String.Equals(str, "three", StringComparison.OrdinalIgnoreCase) then 3
+    elif String.Equals(str, "four", StringComparison.OrdinalIgnoreCase) then 4
+    elif String.Equals(str, "five", StringComparison.OrdinalIgnoreCase) then 5
+    elif String.Equals(str, "six", StringComparison.OrdinalIgnoreCase) then 6
+    elif String.Equals(str, "seven", StringComparison.OrdinalIgnoreCase) then 7
+    elif String.Equals(str, "eight", StringComparison.OrdinalIgnoreCase) then 8
+    elif String.Equals(str, "nine", StringComparison.OrdinalIgnoreCase) then 9
+    else -1
+
 // replicates IL from F# switch
 let stringSwitchIfElse =
     let equals = typeof<string>.GetMethod("Equals", [|typeof<string>; typeof<string>|])
@@ -72,19 +85,6 @@ let stringSwitchIfElse =
         yield ldc'i4 -1
         yield ret
     } |> toDelegate<Func<string, int>> "cilStringIfElse"
-
-let fsStringSwitchCI str =
-    if String.Equals(str, "zero", StringComparison.OrdinalIgnoreCase) then 0
-    elif String.Equals(str, "one", StringComparison.OrdinalIgnoreCase) then 1
-    elif String.Equals(str, "two", StringComparison.OrdinalIgnoreCase) then 2
-    elif String.Equals(str, "three", StringComparison.OrdinalIgnoreCase) then 3
-    elif String.Equals(str, "four", StringComparison.OrdinalIgnoreCase) then 4
-    elif String.Equals(str, "five", StringComparison.OrdinalIgnoreCase) then 5
-    elif String.Equals(str, "six", StringComparison.OrdinalIgnoreCase) then 6
-    elif String.Equals(str, "seven", StringComparison.OrdinalIgnoreCase) then 7
-    elif String.Equals(str, "eight", StringComparison.OrdinalIgnoreCase) then 8
-    elif String.Equals(str, "nine", StringComparison.OrdinalIgnoreCase) then 9
-    else -1
 
 let private ciDict =
     let dict = new System.Collections.Generic.Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
