@@ -27,27 +27,27 @@ module private StringComparerMethods =
     let getHashCode = typeof<StringComparer>.GetMethod("GetHashCode", [| typeof<string> |])
 
 type private SwitchCulture =
-    | IgnoreCase
+    | CaseInsensitive
     | CaseSensitive
 
 let private stringComparison culture =
     match culture with
-    | IgnoreCase -> StringComparison.OrdinalIgnoreCase
+    | CaseInsensitive -> StringComparison.OrdinalIgnoreCase
     | CaseSensitive -> StringComparison.Ordinal
 
 let private stringComparer culture =
     match culture with
-    | IgnoreCase -> call0 StringComparerMethods.ordinalIgnoreCase
+    | CaseInsensitive -> call0 StringComparerMethods.ordinalIgnoreCase
     | CaseSensitive -> call0 StringComparerMethods.ordinal
 
 let private normalizeString culture (str : string) =
     match culture with
-    | IgnoreCase -> str.ToUpperInvariant()
+    | CaseInsensitive -> str.ToUpperInvariant()
     | CaseSensitive -> str
 
 let private normalizeCharCode culture =
     match culture with
-    | IgnoreCase -> call1 CharMethods.toUpperInvariant
+    | CaseInsensitive -> call1 CharMethods.toUpperInvariant
     | CaseSensitive -> zero
 
 type private StringCase<'stackin, 'stackout> = string * Op<'stackin, 'stackout>
@@ -75,28 +75,59 @@ let rec private stringsIfElse
         yield mark exit
     }
 
-let rec private stringsBinarySearch
+let rec private stringsBinarySearchGuts
     culture
     (input : Local)
     (cases: StringCase<_, _> array)
-    (defaultCase : Op<_, _>) =
-    cil {
-        let! def = deflabel
-        let! exit = deflabel
-        for str, code in cases do
-            let! next = deflabel
+    (defaultCase : Op<_, _>)
+    index
+    count =
+    if count <= 0 then defaultCase
+    elif count <= 2 then stringsIfElse culture input (Array.sub cases index count) defaultCase
+    else
+        let half = count / 2
+        let pivot = index + half
+        let str, code = cases.[pivot]
+        cil {
+            let! hit = deflabel
+            let! topHalf = deflabel
+            let! exit = deflabel
             yield ldstr str
             yield ldloc input
             yield ldc'i4 (int (stringComparison culture))
             yield call3 StringMethods.compare3
-            yield brtrue next
-            yield code
+            yield dup
+            yield brfalse hit
+            yield ldc'i4 0
+            yield blt topHalf
+            yield stringsBinarySearchGuts culture input cases defaultCase index half
             yield br exit
-            yield mark next
-        yield mark def
-        yield defaultCase
-        yield mark exit
-    }
+            yield mark topHalf
+            yield stringsBinarySearchGuts culture input cases defaultCase (pivot + 1) (count - half - 1)
+            yield br exit
+            yield mark hit
+            yield pop
+            yield code
+            yield mark exit
+        }
+
+let private stringsBinarySearch
+    culture
+    (input : Local)
+    (cases: StringCase<_, _> array)
+    (defaultCase : Op<_, _>) =
+    let normalize =
+        match culture with
+        | CaseSensitive -> id
+        | CaseInsensitive -> fun (s : string, x) -> s.ToUpperInvariant(), x
+    let cases = cases |> Array.map normalize |> Array.sortBy(fst)
+    stringsBinarySearchGuts
+        culture
+        input
+        cases
+        defaultCase
+        0
+        cases.Length
 
 let private scoreIndex (strings : string seq) i =
     let groups =
@@ -176,7 +207,7 @@ let private strings culture (cases : StringCase<_, _> seq) (defaultCase : Op<_, 
     }
 
 /// Case-insensitively switch on strings.
-let insensitive cases defaultCase = strings IgnoreCase cases defaultCase
+let insensitive cases defaultCase = strings CaseInsensitive cases defaultCase
 
 /// Case-sensitively switch on strings.
 let sensitive cases defaultCase = strings CaseSensitive cases defaultCase
@@ -186,7 +217,7 @@ let private stringsByHash culture (cases : StringCase<_, _> seq) (defaultCase : 
         let! str = tmplocal typeof<string>
         let comparer =
             match culture with
-            | IgnoreCase -> StringComparer.OrdinalIgnoreCase
+            | CaseInsensitive -> StringComparer.OrdinalIgnoreCase
             | CaseSensitive -> StringComparer.Ordinal
         let byHash =
             cases
@@ -200,8 +231,24 @@ let private stringsByHash culture (cases : StringCase<_, _> seq) (defaultCase : 
     }
 
 /// Case-insensitively switch on strings by their hashcodes.
-let insensitiveByHash cases defaultCase = stringsByHash IgnoreCase cases defaultCase
+let insensitiveByHash cases defaultCase = stringsByHash CaseInsensitive cases defaultCase
 
 /// Case-sensitively switch on strings.
 let sensitiveByHash cases defaultCase = stringsByHash CaseSensitive cases defaultCase
+
+/// Plain old binary search, case-insensitive.
+let insensitiveBinary cases defaultCase =
+    cil {
+        let! str = tmplocal typeof<string>
+        yield stloc str
+        yield stringsBinarySearch CaseInsensitive str (cases |> Seq.toArray) defaultCase
+    }
+
+/// Plain old binary search, case-sensitive.
+let sensitiveBinary cases defaultCase =
+    cil {
+        let! str = tmplocal typeof<string>
+        yield stloc str
+        yield stringsBinarySearch CaseSensitive str (cases |> Seq.toArray) defaultCase
+    }
 

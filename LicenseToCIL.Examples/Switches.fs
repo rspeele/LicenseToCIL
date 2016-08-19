@@ -128,13 +128,17 @@ let stringSwitchHash = stringSwitchBy StringSwitch.sensitiveByHash "cilStringSwi
 
 let stringSwitchHashCI = stringSwitchBy StringSwitch.insensitiveByHash "cilStringSwitchHashCI"
 
+let stringSwitchBinary = stringSwitchBy StringSwitch.sensitiveBinary "cilStringSwitchBinary"
+
+let stringSwitchBinaryCI = stringSwitchBy StringSwitch.insensitiveBinary "cilStringSwitchBinaryCI"
+
 let bench name f =
     let sw = new Stopwatch()
     let arr = [| for str, d in digits -> String.Copy(str), d |]
     sw.Start()
     for i = 0 to 10 * 1000 * 1000 do
         let str, d = arr.[i % arr.Length]
-        if f str <> d then failwith "broken"
+        Assert.AreEqual(d, f str)
     sw.Stop()
     printfn "%s took %dms" name sw.ElapsedMilliseconds
     sw.ElapsedMilliseconds
@@ -149,7 +153,7 @@ let benchCI name f =
     sw.Start()
     for i = 0 to 5 * 1000 * 1000 do
         let str, d = arr.[i % arr.Length]
-        if f str <> d then failwith "broken"
+        Assert.AreEqual(d, f str)
     sw.Stop()
     printfn "%s took %dms" name sw.ElapsedMilliseconds
     sw.ElapsedMilliseconds
@@ -195,6 +199,7 @@ type TestSwitches() =
         let ifElse = bench "If/Else" stringSwitchIfElse.Invoke
         let gen = bench "Switch" stringSwitch.Invoke
         let genH = bench "Switch Hash" stringSwitchHash.Invoke
+        let benB = bench "Switch Binary" stringSwitchBinary.Invoke
         if gen > ifElse then failwith "Generated switch slower than if/else"
         if gen > fs then failwith "Generated switch slower than a match statement"
 
@@ -204,4 +209,5 @@ type TestSwitches() =
         let fsDict = benchCI "F# dict" fsStringSwitchDictCI
         let gen = benchCI "Switch" stringSwitchCI.Invoke
         let genH = benchCI "Switch Hash" stringSwitchHashCI.Invoke
+        let genB = benchCI "Switch Binary" stringSwitchBinaryCI.Invoke
         if gen > fs then failwith "Generated switch slower than a match statement"
