@@ -56,6 +56,36 @@ let fsStringSwitch str =
     | "nine" -> 9
     | _ -> -1
 
+// replicates IL from F# switch
+let stringSwitchIfElse =
+    let equals = typeof<string>.GetMethod("Equals", [|typeof<string>; typeof<string>|])
+    cil {
+        for str, i in digits do
+            let! next = deflabel
+            yield ldarg 0
+            yield ldstr str
+            yield call2 equals
+            yield brfalse's next
+            yield ldc'i4 i
+            yield ret
+            yield mark next
+        yield ldc'i4 -1
+        yield ret
+    } |> toDelegate<Func<string, int>> "cilStringIfElse"
+
+type DigitEnum =
+    | zero = 0
+    | one = 1
+    | two = 2
+    | three = 3
+    | four = 4
+    | five = 5
+    | six = 6
+    | seven = 7
+    | eight = 8
+    | nine = 9
+    | invalid = -1
+
 let stringSwitchSensitive =
     cil {
         yield ldarg 0
@@ -115,5 +145,7 @@ type TestSwitches() =
             printfn "%s took %dms" name sw.ElapsedMilliseconds
             sw.ElapsedMilliseconds
         let fs = bench "F#" fsStringSwitch
-        let gen = bench "Generated" stringSwitchSensitive.Invoke
-        if gen > fs then failwith "We're slower than a match statement"
+        let ifElse = bench "If/Else" stringSwitchIfElse.Invoke
+        let gen = bench "Switch" stringSwitchSensitive.Invoke
+        if gen > ifElse then failwith "Generated switch slower than if/else"
+        if gen > fs then failwith "Generated switch slower than a match statement"

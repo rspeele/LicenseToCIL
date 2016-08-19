@@ -16,11 +16,11 @@ type private SwitchGroup<'stackin, 'stackout> =
     member inline this.Count = this.Cases.Count
     member this.Minimum = this.Cases.[0] |> fst
     member this.Maximum = this.Cases.[this.Cases.Count - 1] |> fst
-    member this.Code =
+    member this.Code() =
         if this.Cases.Count > 2
-        then this.SwitchCode
-        else this.IfElseCode
-    member this.IfElseCode : Op<'stackin S, 'stackout> =
+        then this.SwitchCode()
+        else this.IfElseCode()
+    member this.IfElseCode() : Op<'stackin S, 'stackout> =
         cil {
             let! exit = deflabel
             for key, code in this.Cases do
@@ -36,7 +36,7 @@ type private SwitchGroup<'stackin, 'stackout> =
             yield this.Default
             yield mark exit
         }
-    member this.SwitchCode : Op<'stackin S, 'stackout> =
+    member this.SwitchCode() : Op<'stackin S, 'stackout> =
         fun _ il ->
             let exit = il.Generator.DefineLabel()
             let defaultCase = il.Generator.DefineLabel()
@@ -106,7 +106,7 @@ type private SwitchTree<'stackin, 'stackout> =
     | Branch of (SwitchTree<'stackin, 'stackout> * int * SwitchTree<'stackin, 'stackout>)
     member this.Code() : Op<'stackin S, 'stackout> =
         match this with
-        | Leaf group -> group.Code
+        | Leaf group -> group.Code()
         | Branch (left, pivot, right) ->
             cil {
                 let! exit = deflabel
@@ -120,6 +120,11 @@ type private SwitchTree<'stackin, 'stackout> =
                 yield right.Code()
                 yield mark exit
             }
+    member this.BranchingFactor() =
+        match this with
+        | Leaf group -> 0
+        | Branch (left, _, right) ->
+            1 + max (left.BranchingFactor()) (right.BranchingFactor())
 
 let rec private switchTreeGuts (defaultCase : Op<_, _>) (groups : _ array) index count =
     if count <= 0 then Leaf { Cases = new ResizeArray<_>(); Default = defaultCase }
@@ -135,6 +140,10 @@ let rec private switchTreeGuts (defaultCase : Op<_, _>) (groups : _ array) index
 let private switchTree (defaultCase : Op<_, _>) (cases : Case<_, _> seq) =
     let groups = switchGroups defaultCase cases
     switchTreeGuts defaultCase groups 0 groups.Length
+
+let branchingFactor (cases : Case<_, _> seq) (defaultCase : Op<_, _>) =
+    let tree = switchTree defaultCase cases
+    tree.BranchingFactor()
 
 let cases (cases : Case<_, _> seq) (defaultCase : Op<_, _>) =
     let tree = switchTree defaultCase cases

@@ -15,6 +15,11 @@ module private StringMethods =
         typeof<string>.GetProperty("Length", BindingFlags.Public ||| BindingFlags.Instance).GetGetMethod()
     let charAtIndex =
         typeof<string>.GetProperty("Chars", BindingFlags.Public ||| BindingFlags.Instance).GetGetMethod()
+    let compare3 =
+        typeof<string>.GetMethod
+            ( "Compare"
+            , [| typeof<string>;  typeof<string>; typeof<StringComparison> |]
+            )
     let compare6 =
         typeof<string>.GetMethod
             ( "Compare"
@@ -42,15 +47,50 @@ let private normalizeCharCode culture =
 
 type private StringCase<'stackin, 'stackout> = string * Op<'stackin, 'stackout>
 
-let private largestGroupSize (strings : string seq) i =
-    strings
-    |> Seq.groupBy (fun str -> str.[i])
-    |> Seq.map (snd >> Seq.length)
-    |> Seq.max
+let private scoreIndex (strings : string seq) i =
+    let groups =
+        strings
+        |> Seq.groupBy (fun str -> str.[i])
+        |> Seq.toArray
+    if groups.Length <= 1 then Int32.MinValue else
+    let largestGroupSize =
+        groups
+        |> Seq.map (snd >> Seq.length)
+        |> Seq.max
+    let branchingFactor =
+        Switch.branchingFactor
+            [ for (c, _) in groups -> int c, zero ]
+            zero
+    - branchingFactor
+    - largestGroupSize
 
 let private bestIndex length (strings : string seq) =
     seq { 0 .. length - 1}
-    |> Seq.minBy (largestGroupSize strings)
+    |> Seq.maxBy (scoreIndex strings)
+
+let rec private stringsOfLengthIfElse
+    culture
+    (input : Local)
+    (length : int)
+    (cases: StringCase<_, _> array)
+    (defaultCase : Op<_, _>) =
+    cil {
+        let! def = deflabel
+        let! exit = deflabel
+        for str, code in cases do
+            let! skip = deflabel
+            yield ldstr str
+            yield ldloc input
+            yield ldc'i4 (int (stringComparison culture))
+            yield call3 StringMethods.compare3
+            yield brtrue skip
+            yield code
+            yield br exit
+            yield mark skip
+        yield mark def
+        yield defaultCase
+        yield mark exit
+    }
 
 let rec private stringsOfLength
     culture
@@ -63,12 +103,9 @@ let rec private stringsOfLength
     | [| str, code |] ->
         cil {
             yield ldstr str
-            yield ldc'i4 0
             yield ldloc input
-            yield ldc'i4 0
-            yield ldc'i4 length
             yield ldc'i4 (int (stringComparison culture))
-            yield call6 StringMethods.compare6
+            yield call3 StringMethods.compare3
             let! eq = deflabel
             let! exit = deflabel
             yield brfalse eq
@@ -104,11 +141,16 @@ let private strings culture (cases : StringCase<_, _> seq) (defaultCase : Op<_, 
         let byLen =
             cases
             |> Array.groupBy (fun (s, _) -> s.Length)
-            |> Seq.map (fun (len, strs) -> len, stringsOfLength culture str len strs defaultCase)
-        yield dup
-        yield stloc str
-        yield call1 StringMethods.length
-        yield Switch.cases byLen defaultCase
+            |> Array.map (fun (len, strs) -> len, stringsOfLength culture str len strs defaultCase)
+        match byLen with
+        | [| _, code |] ->
+            yield stloc str
+            yield code
+        | byLen ->
+            yield dup
+            yield stloc str
+            yield call1 StringMethods.length
+            yield Switch.cases byLen defaultCase
     }
 
 /// Case-insensitively switch on strings.
