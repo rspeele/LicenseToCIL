@@ -86,6 +86,16 @@ let fsStringSwitchCI str =
     elif String.Equals(str, "nine", StringComparison.OrdinalIgnoreCase) then 9
     else -1
 
+let private ciDict =
+    let dict = new System.Collections.Generic.Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+    for str, d in digits do
+        dict.Add(str, d)
+    dict
+
+let fsStringSwitchDictCI str =
+    let mutable i = -1
+    if ciDict.TryGetValue(str, &i) then i else -1
+
 type DigitEnum =
     | zero = 0
     | one = 1
@@ -137,7 +147,7 @@ let benchCI name f =
     let arr =
         [|
             for str, d in digits -> String.Copy(str), d
-            for str, d in digits -> String.Copy(str).ToUpperInvariant(), d
+            for str, d in digits -> str.ToUpperInvariant(), d
         |]
     sw.Start()
     for i = 0 to 5 * 1000 * 1000 do
@@ -192,6 +202,7 @@ type TestSwitches() =
 
     [<TestMethod>]
     member __.TestStringSwitchPerformanceCI() =
-        let fs = bench "F#" fsStringSwitchCI
-        let gen = bench "Switch" stringSwitchCI.Invoke
+        let fs = benchCI "F#" fsStringSwitchCI
+        let fsDict = benchCI "F# dict" fsStringSwitchDictCI
+        let gen = benchCI "Switch" stringSwitchCI.Invoke
         if gen > fs then failwith "Generated switch slower than a match statement"

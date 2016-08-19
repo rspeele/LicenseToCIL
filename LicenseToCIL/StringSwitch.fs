@@ -45,6 +45,11 @@ let private normalizeCharCode culture =
     | IgnoreCase -> call1 CharMethods.toUpperInvariant
     | CaseSensitive -> zero
 
+let private hashStringCode culture =
+    match culture with
+    | IgnoreCase -> call1 CharMethods.toUpperInvariant
+    | CaseSensitive -> zero
+
 type private StringCase<'stackin, 'stackout> = string * Op<'stackin, 'stackout>
 
 let private scoreIndex (strings : string seq) i =
