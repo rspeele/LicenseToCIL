@@ -125,7 +125,7 @@ let bench name (f : Func<string, int>) =
     sw.Start()
     for i = 0 to 20 * 1000 * 1000 do
         let str, d = arr.[i % arr.Length]
-        Assert.AreEqual(d, f.Invoke(str))
+        if d <> f.Invoke(str) then failwithf "%d <> %d" d (f.Invoke(str))
     sw.Stop()
     printfn "%s took %dms" name sw.ElapsedMilliseconds
     sw.ElapsedMilliseconds
@@ -140,7 +140,7 @@ let benchCI name (f : Func<string, int>) =
     sw.Start()
     for i = 0 to 10 * 1000 * 1000 do
         let str, d = arr.[i % arr.Length]
-        Assert.AreEqual(d, f.Invoke(str))
+        if d <> f.Invoke(str) then failwithf "%d <> %d" d (f.Invoke(str))
     sw.Stop()
     printfn "%s took %dms" name sw.ElapsedMilliseconds
     sw.ElapsedMilliseconds
