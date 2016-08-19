@@ -73,6 +73,19 @@ let stringSwitchIfElse =
         yield ret
     } |> toDelegate<Func<string, int>> "cilStringIfElse"
 
+let fsStringSwitchCI str =
+    if String.Equals(str, "zero", StringComparison.OrdinalIgnoreCase) then 0
+    elif String.Equals(str, "one", StringComparison.OrdinalIgnoreCase) then 1
+    elif String.Equals(str, "two", StringComparison.OrdinalIgnoreCase) then 2
+    elif String.Equals(str, "three", StringComparison.OrdinalIgnoreCase) then 3
+    elif String.Equals(str, "four", StringComparison.OrdinalIgnoreCase) then 4
+    elif String.Equals(str, "five", StringComparison.OrdinalIgnoreCase) then 5
+    elif String.Equals(str, "six", StringComparison.OrdinalIgnoreCase) then 6
+    elif String.Equals(str, "seven", StringComparison.OrdinalIgnoreCase) then 7
+    elif String.Equals(str, "eight", StringComparison.OrdinalIgnoreCase) then 8
+    elif String.Equals(str, "nine", StringComparison.OrdinalIgnoreCase) then 9
+    else -1
+
 type DigitEnum =
     | zero = 0
     | one = 1
@@ -86,7 +99,7 @@ type DigitEnum =
     | nine = 9
     | invalid = -1
 
-let stringSwitchSensitive =
+let stringSwitch =
     cil {
         yield ldarg 0
         yield StringSwitch.sensitive
@@ -95,7 +108,44 @@ let stringSwitchSensitive =
             ] zero
         yield ldc'i4 -1
         yield ret
-    } |> toDelegate<Func<string, int>> "cilStringSwitchSensitive"
+    } |> toDelegate<Func<string, int>> "cilStringSwitch"
+
+let stringSwitchCI =
+    cil {
+        yield ldarg 0
+        yield StringSwitch.insensitive
+            [ for name, i in digits ->
+                name, cil { yield ldc'i4 i; yield ret }
+            ] zero
+        yield ldc'i4 -1
+        yield ret
+    } |> toDelegate<Func<string, int>> "cilStringSwitchCI"
+
+let bench name f =
+    let sw = new Stopwatch()
+    let arr = [| for str, d in digits -> String.Copy(str), d |]
+    sw.Start()
+    for i = 0 to 10 * 1000 * 1000 do
+        let str, d = arr.[i % arr.Length]
+        if f str <> d then failwith "broken"
+    sw.Stop()
+    printfn "%s took %dms" name sw.ElapsedMilliseconds
+    sw.ElapsedMilliseconds
+
+let benchCI name f =
+    let sw = new Stopwatch()
+    let arr =
+        [|
+            for str, d in digits -> String.Copy(str), d
+            for str, d in digits -> String.Copy(str).ToUpperInvariant(), d
+        |]
+    sw.Start()
+    for i = 0 to 5 * 1000 * 1000 do
+        let str, d = arr.[i % arr.Length]
+        if f str <> d then failwith "broken"
+    sw.Stop()
+    printfn "%s took %dms" name sw.ElapsedMilliseconds
+    sw.ElapsedMilliseconds
 
 [<TestClass>]
 type TestSwitches() =
@@ -130,22 +180,18 @@ type TestSwitches() =
     [<TestMethod>]
     member __.TestStringSwitch() =
         for input, expected in digits do
-            Assert.AreEqual(expected, stringSwitchSensitive.Invoke(input))
+            Assert.AreEqual(expected, stringSwitch.Invoke(input))
 
     [<TestMethod>]
     member __.TestStringSwitchPerformance() =
-        let bench name f =
-            let sw = new Stopwatch()
-            let arr = [| for str, d in digits -> String.Copy(str), d |]
-            sw.Start()
-            for i = 0 to 10 * 1000 * 1000 do
-                let str, d = arr.[i % arr.Length]
-                if f str <> d then failwith "broken"
-            sw.Stop()
-            printfn "%s took %dms" name sw.ElapsedMilliseconds
-            sw.ElapsedMilliseconds
         let fs = bench "F#" fsStringSwitch
         let ifElse = bench "If/Else" stringSwitchIfElse.Invoke
-        let gen = bench "Switch" stringSwitchSensitive.Invoke
+        let gen = bench "Switch" stringSwitch.Invoke
         if gen > ifElse then failwith "Generated switch slower than if/else"
+        if gen > fs then failwith "Generated switch slower than a match statement"
+
+    [<TestMethod>]
+    member __.TestStringSwitchPerformanceCI() =
+        let fs = bench "F#" fsStringSwitchCI
+        let gen = bench "Switch" stringSwitchCI.Invoke
         if gen > fs then failwith "Generated switch slower than a match statement"
