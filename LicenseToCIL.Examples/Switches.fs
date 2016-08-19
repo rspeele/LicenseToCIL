@@ -123,7 +123,7 @@ let bench name (f : Func<string, int>) =
     let sw = new Stopwatch()
     let arr = [| for str, d in digits -> String.Copy(str), d |]
     sw.Start()
-    for i = 0 to 10 * 1000 * 1000 do
+    for i = 0 to 20 * 1000 * 1000 do
         let str, d = arr.[i % arr.Length]
         Assert.AreEqual(d, f.Invoke(str))
     sw.Stop()
@@ -138,7 +138,7 @@ let benchCI name (f : Func<string, int>) =
             for str, d in digits -> str.ToUpperInvariant(), d
         |]
     sw.Start()
-    for i = 0 to 5 * 1000 * 1000 do
+    for i = 0 to 10 * 1000 * 1000 do
         let str, d = arr.[i % arr.Length]
         Assert.AreEqual(d, f.Invoke(str))
     sw.Stop()
