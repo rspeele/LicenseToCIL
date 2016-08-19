@@ -48,6 +48,10 @@ let private largestGroupSize (strings : string seq) i =
     |> Seq.map (snd >> Seq.length)
     |> Seq.max
 
+let private bestIndex length (strings : string seq) =
+    seq { 0 .. length - 1}
+    |> Seq.minBy (largestGroupSize strings)
+
 let rec private stringsOfLength
     culture
     (input : Local)
@@ -75,10 +79,7 @@ let rec private stringsOfLength
             yield mark exit
         }
     | cases ->
-        let strings = cases |> Seq.map fst
-        let bestIndex =
-            seq { 0 .. length - 1}
-            |> Seq.minBy (largestGroupSize strings)
+        let bestIndex = cases |> Seq.map fst |> bestIndex length
         let groups =
             cases
             |> Array.groupBy (fun (s, _) -> s.[bestIndex])
