@@ -96,32 +96,32 @@ let fsStringSwitchDictCI str =
     let mutable i = -1
     if ciDict.TryGetValue(str, &i) then i else -1
 
-let stringSwitchBy meth name =
+let stringSwitchBy meth options name =
     cil {
         yield ldarg 0
         yield meth
-            [ for name, i in digits ->
+            [ for name, i in options ->
                 name, cil { yield ldc'i4 i; yield ret }
             ] zero
         yield ldc'i4 -1
         yield ret
     } |> toDelegate<Func<string, int>> name
 
-let stringSwitch = stringSwitchBy StringSwitch.sensitive "cilStringSwitch"
+let stringSwitch = stringSwitchBy StringSwitch.sensitive digits "cilStringSwitch"
 
-let stringSwitchCI = stringSwitchBy StringSwitch.insensitive "cilStringSwitchCI"
+let stringSwitchCI = stringSwitchBy StringSwitch.insensitive digits "cilStringSwitchCI"
 
-let stringSwitchHash = stringSwitchBy StringSwitch.sensitiveByHash "cilStringSwitchHash"
+let stringSwitchHash = stringSwitchBy StringSwitch.sensitiveByHash digits "cilStringSwitchHash"
 
-let stringSwitchHashCI = stringSwitchBy StringSwitch.insensitiveByHash "cilStringSwitchHashCI"
+let stringSwitchHashCI = stringSwitchBy StringSwitch.insensitiveByHash digits "cilStringSwitchHashCI"
 
-let stringSwitchBinary = stringSwitchBy StringSwitch.sensitiveBinary "cilStringSwitchBinary"
+let stringSwitchBinary = stringSwitchBy StringSwitch.sensitiveBinary digits "cilStringSwitchBinary"
 
-let stringSwitchBinaryCI = stringSwitchBy StringSwitch.insensitiveBinary "cilStringSwitchBinaryCI"
+let stringSwitchBinaryCI = stringSwitchBy StringSwitch.insensitiveBinary digits "cilStringSwitchBinaryCI"
 
-let bench name (f : Func<string, int>) =
+let bench options name (f : Func<string, int>) =
     let sw = new Stopwatch()
-    let arr = [| for str, d in digits -> String.Copy(str), d |]
+    let arr = [| for str, d in options -> String.Copy(str), d |]
     sw.Start()
     for i = 0 to 20 * 1000 * 1000 do
         let str, d = arr.[i % arr.Length]
@@ -130,12 +130,12 @@ let bench name (f : Func<string, int>) =
     printfn "%s took %dms" name sw.ElapsedMilliseconds
     sw.ElapsedMilliseconds
 
-let benchCI name (f : Func<string, int>) =
+let benchCI options name (f : Func<string, int>) =
     let sw = new Stopwatch()
     let arr =
         [|
-            for str, d in digits -> String.Copy(str), d
-            for str, d in digits -> str.ToUpperInvariant(), d
+            for str, d in options -> String.Copy(str), d
+            for str, d in options -> str.ToUpperInvariant(), d
         |]
     sw.Start()
     for i = 0 to 10 * 1000 * 1000 do
@@ -182,18 +182,83 @@ type TestSwitches() =
 
     [<TestMethod>]
     member __.TestStringSwitchPerformance() =
-        let fs = bench "F#" (Func<string,int>(fsStringSwitch))
-        let ifElse = bench "If/Else" stringSwitchIfElse
-        let gen = bench "Switch" stringSwitch
-        let genH = bench "Switch Hash" stringSwitchHash
-        let benB = bench "Switch Binary" stringSwitchBinary
+        let fs = bench digits "F#" (Func<string,int>(fsStringSwitch))
+        let ifElse = bench digits "If/Else" stringSwitchIfElse
+        let gen = bench digits "Switch" stringSwitch
+        let genH = bench digits "Switch Hash" stringSwitchHash
+        let benB = bench digits "Switch Binary" stringSwitchBinary
         if gen > int64 (double fs * 1.1) then failwith "Generated switch much slower than if/else"
 
     [<TestMethod>]
     member __.TestStringSwitchPerformanceCI() =
-        let fs = benchCI "F#" (Func<string,int>(fsStringSwitchCI))
-        let fsDict = benchCI "F# dict" (Func<string,int>(fsStringSwitchDictCI))
-        let gen = benchCI "Switch" stringSwitchCI
-        let genH = benchCI "Switch Hash" stringSwitchHashCI
-        let genB = benchCI "Switch Binary" stringSwitchBinaryCI
+        let fs = benchCI digits "F#" (Func<string,int>(fsStringSwitchCI))
+        let fsDict = benchCI digits "F# dict" (Func<string,int>(fsStringSwitchDictCI))
+        let gen = benchCI digits "Switch" stringSwitchCI
+        let genH = benchCI digits "Switch Hash" stringSwitchHashCI
+        let genB = benchCI digits "Switch Binary" stringSwitchBinaryCI
         if gen > int64 (double fs * 1.1) then failwith "Generated switch much slower than chain of insensitive compares"
+
+    [<TestMethod>]
+    member __.TestSwitchLongNames() =
+        let approvals =
+            [
+                "Draft", 0
+                "InReview", 1
+                "Reviewed", 2
+                "ReadyForApproval", 3
+                "InApprovalProcess", 4
+                "ApprovalEdits", 5
+                "ApprovalComplete", 6
+                "ApprovalRevoked", 7
+                "Show", 8
+            ]
+        let stringSwitch = stringSwitchBy StringSwitch.sensitive approvals "cilStringSwitch"
+
+        let stringSwitchCI = stringSwitchBy StringSwitch.insensitive approvals "cilStringSwitchCI"
+
+        let stringSwitchHash = stringSwitchBy StringSwitch.sensitiveByHash approvals "cilStringSwitchHash"
+
+        let stringSwitchHashCI = stringSwitchBy StringSwitch.insensitiveByHash approvals "cilStringSwitchHashCI"
+
+        let stringSwitchBinary = stringSwitchBy StringSwitch.sensitiveBinary approvals "cilStringSwitchBinary"
+
+        let stringSwitchBinaryCI = stringSwitchBy StringSwitch.insensitiveBinary approvals "cilStringSwitchBinaryCI"
+
+        [
+            bench approvals "Switch" stringSwitch
+            bench approvals "Switch Hash" stringSwitchHash
+            bench approvals "Switch Binary" stringSwitchBinary
+
+            benchCI approvals "Switch CI" stringSwitchCI
+            benchCI approvals "Switch Hash CI" stringSwitchHashCI
+            benchCI approvals "Switch Binary CI" stringSwitchBinaryCI
+        ] |> ignore
+
+    [<TestMethod>]
+    [<Ignore>] // this test is fun, but takes too long to run
+    member __.TestSwitchManyNames() =
+        let names =
+            [ for i = 0 to 1000 do
+                yield Guid.NewGuid().ToString("n").Substring(0, 8), i
+            ]
+        let stringSwitch = stringSwitchBy StringSwitch.sensitive names "cilStringSwitch"
+
+        let stringSwitchCI = stringSwitchBy StringSwitch.insensitive names "cilStringSwitchCI"
+
+        let stringSwitchHash = stringSwitchBy StringSwitch.sensitiveByHash names "cilStringSwitchHash"
+
+        let stringSwitchHashCI = stringSwitchBy StringSwitch.insensitiveByHash names "cilStringSwitchHashCI"
+
+        let stringSwitchBinary = stringSwitchBy StringSwitch.sensitiveBinary names "cilStringSwitchBinary"
+
+        let stringSwitchBinaryCI = stringSwitchBy StringSwitch.insensitiveBinary names "cilStringSwitchBinaryCI"
+
+        [
+            bench names "Switch" stringSwitch
+            bench names "Switch Hash" stringSwitchHash
+            bench names "Switch Binary" stringSwitchBinary
+
+            benchCI names "Switch CI" stringSwitchCI
+            benchCI names "Switch Hash CI" stringSwitchHashCI
+            benchCI names "Switch Binary CI" stringSwitchBinaryCI
+        ] |> ignore
