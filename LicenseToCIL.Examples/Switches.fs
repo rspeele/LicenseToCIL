@@ -262,3 +262,33 @@ type TestSwitches() =
             benchCI names "Switch Hash CI" stringSwitchHashCI
             benchCI names "Switch Binary CI" stringSwitchBinaryCI
         ] |> ignore
+
+    [<TestMethod>]
+    [<Ignore>] // this test is fun, but takes too long to run
+    member __.TestSwitchManySimilarNames() =
+        let longPrefix = "GiantLongEnumName"
+        let names =
+            [ for i = 0 to 1000 do
+                yield longPrefix + string i, i
+            ]
+        let stringSwitch = stringSwitchBy StringSwitch.sensitive names "cilStringSwitch"
+
+        let stringSwitchCI = stringSwitchBy StringSwitch.insensitive names "cilStringSwitchCI"
+
+        let stringSwitchHash = stringSwitchBy StringSwitch.sensitiveByHash names "cilStringSwitchHash"
+
+        let stringSwitchHashCI = stringSwitchBy StringSwitch.insensitiveByHash names "cilStringSwitchHashCI"
+
+        let stringSwitchBinary = stringSwitchBy StringSwitch.sensitiveBinary names "cilStringSwitchBinary"
+
+        let stringSwitchBinaryCI = stringSwitchBy StringSwitch.insensitiveBinary names "cilStringSwitchBinaryCI"
+
+        [
+            bench names "Switch" stringSwitch
+            bench names "Switch Hash" stringSwitchHash
+            bench names "Switch Binary" stringSwitchBinary
+
+            benchCI names "Switch CI" stringSwitchCI
+            benchCI names "Switch Hash CI" stringSwitchHashCI
+            benchCI names "Switch Binary CI" stringSwitchBinaryCI
+        ] |> ignore
