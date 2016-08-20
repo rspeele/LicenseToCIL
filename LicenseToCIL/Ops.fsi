@@ -425,9 +425,9 @@ val rem : Op<'x S S, 'x S>
 /// [_, value1, value2 --> _, result] Remainder when dividing one unsigned value by another.
 val rem'un : Op<'x S S, 'x S>
 /// [ retVal --> ] Return from method with a value.
-val ret : Op<E S, E>
+val ret : Op<E S, 'x>
 /// [ --> ] Return from method without a value.
-val ret'void : Op<E, E>
+val ret'void : Op<E, 'x>
 /// [_ --> _] Rethrow the current exception.
 val rethrow : Op<'x, 'x>
 /// [_, value, shiftAmount --> _, result] Shift an integer left (shifting in zeros), return an integer.

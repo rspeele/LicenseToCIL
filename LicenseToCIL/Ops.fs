@@ -125,12 +125,13 @@ let pop stack = pops stack (fun g -> g.Emit(OpCodes.Pop))
 
 let dup (stack : 'x S S) = pushes stack (fun g -> g.Emit(OpCodes.Dup))
 
-let ret (stack : E S S) =
-    pops stack (fun g -> g.Emit(OpCodes.Ret))
+let ret (stack : E S S) (il : IL) =
+    il.Generator.Emit(OpCodes.Ret)
+    null : 'x S
 
 let ret'void (stack : E S) (il : IL) =
     il.Generator.Emit(OpCodes.Ret)
-    stack
+    null : 'x S
 
 ////////////////////////////////////////
 // Loading constants
