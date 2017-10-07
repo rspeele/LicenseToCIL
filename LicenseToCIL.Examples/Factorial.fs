@@ -34,6 +34,15 @@ let fsIterativeFactorial x =
         n <- n - 1
     acc
 
+let example() =
+    cil {
+        yield ldc'i4 1
+        yield ldc'i4 2
+        yield add
+        yield ldc'i4 3
+        yield add
+    }
+
 let cilIterativeFactorial =
     cil {
         let! acc = deflocal typeof<int>

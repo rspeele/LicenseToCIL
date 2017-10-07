@@ -38,8 +38,8 @@ type private SwitchGroup<'stackin, 'stackout> =
         }
     member this.SwitchCode() : Op<'stackin S, 'stackout> =
         fun _ _ il ->
-            let exit = il.Generator.DefineLabel()
-            let defaultCase = il.Generator.DefineLabel()
+            let exit = il.DefineLabel()
+            let defaultCase = il.DefineLabel()
             let minimum = this.Minimum
             let labels = Array.zeroCreate (1 + this.Maximum - minimum)
             do
@@ -48,14 +48,14 @@ type private SwitchGroup<'stackin, 'stackout> =
                     let k = key - minimum
                     for i = next to k - 1 do // fill gaps with branches to default
                         labels.[i] <- defaultCase
-                    labels.[k] <- il.Generator.DefineLabel()
+                    labels.[k] <- il.DefineLabel()
                     next <- k + 1
             if minimum <> 0 then
                 (cil {
                     yield ldc'i4 minimum
                     yield sub
                 }) null null il
-            il.Generator.Emit(OpCodes.Switch, labels)
+            il.EmitSwitch(labels)
             (cil {
                 let defaultCase = Label defaultCase
                 let exit = Label exit
