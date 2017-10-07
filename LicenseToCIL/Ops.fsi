@@ -3,6 +3,7 @@ open LicenseToCIL
 open LicenseToCIL.Stack
 open FSharp.Quotations
 open System
+open System.ComponentModel
 open System.Reflection
 open System.Reflection.Emit
 
@@ -12,6 +13,14 @@ type Label<'stack> = Label of Label
 type LabelDefinition = internal | LabelDefinition
 type LocalDefinition = internal | LocalDefinition of Type
 type LocalTemporary = internal | LocalTemporary of Type
+
+type CILHelpers =
+    class
+        static member LdLoc : LocalBuilder * ILGenerator -> unit
+        static member LdLoca : LocalBuilder * ILGenerator -> unit
+        static member StLoc : LocalBuilder * ILGenerator -> unit
+        static member LdcI4 : int * ILGenerator -> unit
+    end
 
 /// Sequence together two stack operations.
 val inline combine : Op<'i, 'm> -> (unit -> Op<'m, 'e>) -> Op<'i, 'e>
@@ -313,13 +322,13 @@ val ldarg : num : int -> Op<'x, 'x S>
 /// [_ --> _, addr] Load address of argument numbered num onto the stack.
 val ldarga : num : int -> Op<'x, 'x S>
 /// [_ --> _, value] Load int32 value onto the stack.
-val ldc'i4 : int -> Op<'x, 'x S>
+val inline ldc'i4 : int -> Op<'x, 'x S>
 /// [_ --> _, value] Load int64 value onto the stack.
-val ldc'i8 : int64 -> Op<'x, 'x S>
+val inline ldc'i8 : int64 -> Op<'x, 'x S>
 /// [_ --> _, value] Load float32 value onto the stack.
-val ldc'r4 : single -> Op<'x, 'x S>
+val inline ldc'r4 : single -> Op<'x, 'x S>
 /// [_ --> _, value] Load float64 value onto the stack.
-val ldc'r8 : double -> Op<'x, 'x S>
+val inline ldc'r8 : double -> Op<'x, 'x S>
 /// [_, array, index --> _, value] Load the element at index onto the top of the stack.
 val ldelem : elemTy : Type -> Op<'x S S, 'x S>
 /// [_, array, index --> _, value] Load the native integer at index onto the top of the stack.
@@ -377,9 +386,9 @@ val ldind'u4 : Op<'x S, 'x S>
 /// [_, array --> _, length] Push the length (of type native unsigned int) of array on the stack.
 val ldlen : Op<'x S, 'x S>
 /// [_ --> _, value] Load the value of `local` on the stack.
-val ldloc : local : Local -> Op<'x, 'x S>
+val inline ldloc : local : Local -> Op<'x, 'x S>
 /// [_ --> _, value] Load the address of `local` on the stack.
-val ldloca : local : Local -> Op<'x, 'x S>
+val inline ldloca : local : Local -> Op<'x, 'x S>
 /// [_ --> _, null value] Push a null reference on the stack.
 val ldnull : Op<'x, 'x S>
 /// [_, src --> _, val] Copy the value stored at address src to the stack.
@@ -389,7 +398,7 @@ val ldsfld : field: FieldInfo -> Op<'x, 'x S>
 /// [_, --> _, value] Push the address of `field` on the stack.
 val ldsflda : field : FieldInfo -> Op<'x, 'x S>
 /// [_, --> _, str] Push a literal string on the stack.
-val ldstr : str : string -> Op<'x, 'x S>
+val inline ldstr : str : string -> Op<'x, 'x S>
 /// [_ --> _, RuntimeHandle] Push runtime handle to a type on the stack.
 val ldtoken : ty : Type -> Op<'x, 'x S>
 /// [_, object --> _, ftn] Push address of virtual method `meth` on the stack.
@@ -477,7 +486,7 @@ val stind'r8 : Op<'x S S, 'x>
 /// [_, addr, val --> _] Store value of type object reference into memory at address.
 val stind'ref : Op<'x S S, 'x>
 /// [_, value --> _] Pop a value from stack into local variable `local`.
-val stloc : local : Local -> Op<'x S, 'x>
+val inline stloc : local : Local -> Op<'x S, 'x>
 /// [_, dest, src --> _,] Store a value of type `ty` at an address.
 val stobj : ty : Type -> Op<'x S S, 'x>
 /// [_, val --> _,] Replace the value of `field` with val.

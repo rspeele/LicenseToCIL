@@ -4,6 +4,7 @@ open LicenseToCIL.Stack
 open System
 open System.Reflection
 open System.Reflection.Emit
+open System.ComponentModel
 
 type Local = LocalBuilder
 
@@ -12,25 +13,73 @@ let inline combine (op1 : Op<'inp, 'mid>) (op2 : unit -> Op<'mid, 'out>) : Op<'i
         op1 null null il
         op2 () null null il
 
+type CILHelpers = // making these normal static methods instead of let-bound functions prevents confusing inliner
+    static member LdLoc (local : LocalBuilder, il : ILGenerator) =
+        match local.LocalIndex with
+        | 0 -> il.Emit(OpCodes.Ldloc_0)
+        | 1 -> il.Emit(OpCodes.Ldloc_1)
+        | 2 -> il.Emit(OpCodes.Ldloc_2)
+        | 3 -> il.Emit(OpCodes.Ldloc_3)
+        | s when s < 256 -> il.Emit(OpCodes.Ldloc_S, byte s)
+        | i -> il.Emit(OpCodes.Ldloc, int16 i)
+    static member LdLoca(local : LocalBuilder, il : ILGenerator) =
+        match local.LocalIndex with
+        | s when s < 256 -> il.Emit(OpCodes.Ldloca_S, byte s)
+        | i -> il.Emit(OpCodes.Ldloca, int16 i)
+    static member StLoc(local : LocalBuilder, il : ILGenerator) =
+        match local.LocalIndex with
+        | 0 -> il.Emit(OpCodes.Stloc_0)
+        | 1 -> il.Emit(OpCodes.Stloc_1)
+        | 2 -> il.Emit(OpCodes.Stloc_2)
+        | 3 -> il.Emit(OpCodes.Stloc_3)
+        | s when s < 256 -> il.Emit(OpCodes.Stloc_S, byte s)
+        | i -> il.Emit(OpCodes.Stloc, i)
+    static member LdcI4(i : int, il : ILGenerator) =
+        match i with
+        | -1 -> il.Emit(OpCodes.Ldc_I4_M1)
+        | 0 -> il.Emit(OpCodes.Ldc_I4_0)
+        | 1 -> il.Emit(OpCodes.Ldc_I4_1)
+        | 2 -> il.Emit(OpCodes.Ldc_I4_2)
+        | 3 -> il.Emit(OpCodes.Ldc_I4_3)
+        | 4 -> il.Emit(OpCodes.Ldc_I4_4)
+        | 5 -> il.Emit(OpCodes.Ldc_I4_5)
+        | 6 -> il.Emit(OpCodes.Ldc_I4_6)
+        | 7 -> il.Emit(OpCodes.Ldc_I4_7)
+        | 8 -> il.Emit(OpCodes.Ldc_I4_8)
+        | s when s >= -128 && s < 128 -> il.Emit(OpCodes.Ldc_I4_S, sbyte s)
+        | i -> il.Emit(OpCodes.Ldc_I4, i)
+
+[<Obsolete>]
 let inline private nops (f : ILGenerator -> unit) (_ : 'x S) (_ : 'x S) (il : IL) =
     f il.Generator
 
+[<Obsolete>]
 let inline private plus1in (op : Op<'x, 'y>) : Op<'x S, 'y> =
     fun (_ : 'x S S) (_ : 'y S) il ->
         op null null il
 
+[<Obsolete>]
 let inline private plus1out (op : Op<'x, 'y>) : Op<'x, 'y S> =
     fun (_ : 'x S) (_ : 'y S S) il ->
         op null null il
 
+[<Obsolete>]
 let inline private pops f = nops f |> plus1in
+[<Obsolete>]
 let inline private pops2 f = pops f |> plus1in
+[<Obsolete>]
 let inline private pops3 f = pops2 f |> plus1in
+[<Obsolete>]
 let inline private pops1pushes1 f = pops f |> plus1out
+[<Obsolete>]
 let inline private pops2pushes1 f = pops2 f |> plus1out
+[<Obsolete>]
 let inline private pushes f = nops f |> plus1out
+[<Obsolete>]
 let inline private binop opcode = pops2pushes1 (fun il -> il.Emit(opcode))
+[<Obsolete>]
 let inline private binop0 opcode = pops2 (fun il -> il.Emit(opcode))
+[<Obsolete>]
 let inline private unop opcode = pops1pushes1 (fun il -> il.Emit(opcode))
 
 let inline zero (_ : 'x S) (_ : 'x S) (_ : IL) =
@@ -126,33 +175,20 @@ let ret'void (_ : E S) (_ : 'x S) (il : IL) =
 let ldnull (_ : 'x S) (_ : 'x S S) (il : IL) =
     il.Generator.Emit(OpCodes.Ldnull)
 
-let ldc'i4 (i : int) =
-    pushes <| fun il ->
-    match i with
-    | -1 -> il.Emit(OpCodes.Ldc_I4_M1)
-    | 0 -> il.Emit(OpCodes.Ldc_I4_0)
-    | 1 -> il.Emit(OpCodes.Ldc_I4_1)
-    | 2 -> il.Emit(OpCodes.Ldc_I4_2)
-    | 3 -> il.Emit(OpCodes.Ldc_I4_3)
-    | 4 -> il.Emit(OpCodes.Ldc_I4_4)
-    | 5 -> il.Emit(OpCodes.Ldc_I4_5)
-    | 6 -> il.Emit(OpCodes.Ldc_I4_6)
-    | 7 -> il.Emit(OpCodes.Ldc_I4_7)
-    | 8 -> il.Emit(OpCodes.Ldc_I4_8)
-    | s when s >= -128 && s < 128 -> il.Emit(OpCodes.Ldc_I4_S, sbyte s)
-    | i -> il.Emit(OpCodes.Ldc_I4, i)
+let inline ldc'i4 (i : int) (_ : 'x S) (_ : 'x S S) (il : IL) =
+    CILHelpers.LdcI4(i, il.Generator)
 
-let ldc'i8 (i : int64) =
-    pushes <| fun il -> il.Emit(OpCodes.Ldc_I8, i)
+let inline ldc'i8 (i : int64) (_ : 'x S) (_ : 'x S S) (il : IL) =
+    il.Generator.Emit(OpCodes.Ldc_I8, i)
 
-let ldc'r4 (r : single) =
-    pushes <| fun il -> il.Emit(OpCodes.Ldc_R4, r)
+let inline ldc'r4 (r : single) (_ : 'x S) (_ : 'x S S) (il : IL) =
+    il.Generator.Emit(OpCodes.Ldc_R4, r)
 
-let ldc'r8 (r : double) =
-    pushes <| fun il -> il.Emit(OpCodes.Ldc_R8, r)
+let inline ldc'r8 (r : double) (_ : 'x S) (_ : 'x S S) (il : IL) =
+    il.Generator.Emit(OpCodes.Ldc_R8, r)
 
-let ldstr (s: string) =
-    pushes <| fun il -> il.Emit(OpCodes.Ldstr, s)
+let inline ldstr (s : string) (_ : 'x S) (_ : 'x S S) (il : IL) =
+    il.Generator.Emit(OpCodes.Ldstr, s)
 
 ////////////////////////////////////////
 // Arithmetic and logic
@@ -350,31 +386,14 @@ type LocalTemporary = internal | LocalTemporary of Type
 let deflocal ty = LocalDefinition ty
 let tmplocal ty = LocalTemporary ty
     
-let ldloc (local : LocalBuilder) =
-    pushes <| fun il ->
-    match local.LocalIndex with
-    | 0 -> il.Emit(OpCodes.Ldloc_0)
-    | 1 -> il.Emit(OpCodes.Ldloc_1)
-    | 2 -> il.Emit(OpCodes.Ldloc_2)
-    | 3 -> il.Emit(OpCodes.Ldloc_3)
-    | s when s < 256 -> il.Emit(OpCodes.Ldloc_S, byte s)
-    | i -> il.Emit(OpCodes.Ldloc, int16 i)
+let inline ldloc (local : LocalBuilder) (_ : 'x S) (_ : 'x S S) (il : IL) =
+    CILHelpers.LdLoc(local, il.Generator)
 
-let ldloca (local : LocalBuilder) =
-    pushes <| fun il ->
-    match local.LocalIndex with
-    | s when s < 256 -> il.Emit(OpCodes.Ldloca_S, byte s)
-    | i -> il.Emit(OpCodes.Ldloca, int16 i)
-
-let stloc (local : LocalBuilder) =
-    pops <| fun il ->
-    match local.LocalIndex with
-    | 0 -> il.Emit(OpCodes.Stloc_0)
-    | 1 -> il.Emit(OpCodes.Stloc_1)
-    | 2 -> il.Emit(OpCodes.Stloc_2)
-    | 3 -> il.Emit(OpCodes.Stloc_3)
-    | s when s < 256 -> il.Emit(OpCodes.Stloc_S, byte s)
-    | i -> il.Emit(OpCodes.Stloc, i)
+let inline ldloca (local : LocalBuilder) (_ : 'x S) (_ : 'x S S) (il : IL) =
+    CILHelpers.LdLoca(local, il.Generator)
+    
+let inline stloc (local : LocalBuilder) (_ : 'x S S) (_ : 'x S) (il : IL) =
+    CILHelpers.StLoc(local, il.Generator)
 
 ////////////////////////////////////////
 // Labels and branching
