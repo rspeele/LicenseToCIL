@@ -10,20 +10,20 @@ type CILBuilder() =
     member inline __.Run(x : unit -> Op<_, _>) = x()
 
     member __.Bind(_ : Ops.LabelDefinition, con : 'x Ops.Label -> Op<'i, 'o>) : Op<'i, 'o> =
-        fun stack il ->
+        fun stackin stackout il ->
             let lbl = il.Generator.DefineLabel()
-            con (Ops.Label lbl) stack il
+            con (Ops.Label lbl) stackin stackout il
 
     member __.Bind(Ops.LocalDefinition ty, con : Ops.Local -> Op<'i, 'o>) : Op<'i, 'o> =
-        fun stack il ->
+        fun stackin stackout il ->
             let loc = il.Generator.DeclareLocal(ty)
-            con loc stack il
+            con loc stackin stackout il
 
     member __.Bind(Ops.LocalTemporary ty, con : Ops.Local -> Op<'i, 'o>) : Op<'i, 'o> =
-        fun stack il ->
+        fun stackin stackout il ->
             let loc, free = il.AllocateLocal(ty)
             try
-                con loc stack il
+                con loc stackin stackout il
             finally
                 free()
 

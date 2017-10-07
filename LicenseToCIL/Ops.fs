@@ -7,52 +7,43 @@ open System.Reflection.Emit
 
 type Local = LocalBuilder
 
-let inline private pops stack f (il : IL) =
-    f il.Generator
-    stack |> popped
-
-let inline private pops2 stack f (il : IL) = pops stack f il |> popped
-let inline private pops3 stack f (il : IL) = pops2 stack f il |> popped
-let inline pops1pushes1 stack f =
-    pops stack f >> pushed
-let inline pops2pushes1 stack f =
-    pops2 stack f >> pushed
-
-let inline private nops (stack : 'x S) f (il : IL) =
-    f il.Generator
-    stack
-
-let inline private pushes stack f (il : IL) =
-    f il.Generator
-    stack |> pushed
-
-let inline private binop opcode stack (il : IL) =
-    il.Generator.Emit(opcode)
-    stack |> popped |> popped |> pushed
-
-let inline private binop0 opcode stack (il : IL) =
-    il.Generator.Emit(opcode)
-    stack |> popped |> popped
-
-let inline private unop opcode stack (il : IL) =
-    il.Generator.Emit(opcode)
-    stack |> popped |> pushed
-
 let inline combine (op1 : Op<'inp, 'mid>) (op2 : unit -> Op<'mid, 'out>) : Op<'inp, 'out> =
-    fun stack il -> op2 () (op1 stack il) il
+    fun _ _ il ->
+        op1 null null il
+        op2 () null null il
 
-let inline zero (stack : 'x S) (il : IL) = stack
+let inline private nops (f : ILGenerator -> unit) (_ : 'x S) (_ : 'x S) (il : IL) =
+    f il.Generator
 
-let inline pretend<'x, 'y> (stack : 'x S) (il : IL) : 'y S =
-    null : 'y S
+let inline private plus1in (op : Op<'x, 'y>) : Op<'x S, 'y> =
+    fun (_ : 'x S S) (_ : 'y S) il ->
+        op null null il
+
+let inline private plus1out (op : Op<'x, 'y>) : Op<'x, 'y S> =
+    fun (_ : 'x S) (_ : 'y S S) il ->
+        op null null il
+
+let inline private pops f = nops f |> plus1in
+let inline private pops2 f = pops f |> plus1in
+let inline private pops3 f = pops2 f |> plus1in
+let inline private pops1pushes1 f = pops f |> plus1out
+let inline private pops2pushes1 f = pops2 f |> plus1out
+let inline private pushes f = nops f |> plus1out
+let inline private binop opcode = pops2pushes1 (fun il -> il.Emit(opcode))
+let inline private binop0 opcode = pops2 (fun il -> il.Emit(opcode))
+let inline private unop opcode = pops1pushes1 (fun il -> il.Emit(opcode))
+
+let inline zero (_ : 'x S) (_ : 'x S) (_ : IL) =
+    ()
+
+let inline pretend (_ : 'x S) (_ : 'y S) (_ : IL) = ()
 
 ////////////////////////////////////////
 // Calls
 ////////////////////////////////////////
 
-let call'x (meth : MethodInfo) (stack : 'x S) (il : IL) =
+let call'x (meth : MethodInfo) (_ : 'x S) (_ : 'y S) (il : IL) =
     il.Generator.Emit(OpCodes.Call, meth)
-    null : 'y S
 
 let call0 meth : Op<'x, 'x S> = call'x meth
 let call1 meth : Op<'x S, 'x S> = call'x meth
@@ -70,9 +61,8 @@ let call4'void meth : Op<'x S S S S, 'x> = call'x meth
 let call5'void meth : Op<'x S S S S S, 'x> = call'x meth
 let call6'void meth : Op<'x S S S S S S, 'x> = call'x meth
 
-let calli'x (stack : 'x S S) (il : IL) =
+let calli'x (_ : 'x S S) (_ : 'y S) (il : IL) =
     il.Generator.Emit(OpCodes.Calli)
-    null : 'y S
 
 let calli0 : Op<'x S, 'x S> = fun st -> calli'x st
 let calli1 : Op<'x S S, 'x S> = fun st -> calli'x st
@@ -88,9 +78,8 @@ let calli3'void : Op<'x S S S S, 'x S> = fun st -> calli'x st
 let calli4'void : Op<'x S S S S S, 'x S> = fun st -> calli'x st
 let calli5'void : Op<'x S S S S S S, 'x S> = fun st -> calli'x st
 
-let callvirt'x (meth : MethodInfo) (stack : 'x S) (il : IL) =
+let callvirt'x (meth : MethodInfo) (_ : 'x S) (_ : 'y S) (il : IL) =
     il.Generator.Emit(OpCodes.Callvirt, meth)
-    null : 'y S
 
 let callvirt1 meth : Op<'x S, 'x S> = callvirt'x meth
 let callvirt2 meth : Op<'x S S, 'x S> = callvirt'x meth
@@ -104,9 +93,8 @@ let callvirt3'void meth : Op<'x S S S, 'x> = callvirt'x meth
 let callvirt4'void meth : Op<'x S S S S, 'x> = callvirt'x meth
 let callvirt5'void meth : Op<'x S S S S S, 'x> = callvirt'x meth
 
-let newobj'x (cons : ConstructorInfo) (stack : 'x S) (il : IL) =
+let newobj'x (cons : ConstructorInfo) (_ : 'x S) (_ : 'y S S) (il : IL) =
     il.Generator.Emit(OpCodes.Newobj, cons)
-    null : 'y S S
 
 let newobj0 cons : Op<'x, 'x S> = newobj'x cons
 let newobj1 cons : Op<'x S, 'x S> = newobj'x cons
@@ -119,29 +107,27 @@ let newobj5 cons : Op<'x S S S S S, 'x S> = newobj'x cons
 // Primitive stack operations
 ////////////////////////////////////////
 
-let nop stack = nops stack <| fun il -> il.Emit(OpCodes.Nop)
+let nop stackin = (nops <| fun il -> il.Emit(OpCodes.Nop)) stackin
 
-let pop stack = pops stack (fun g -> g.Emit(OpCodes.Pop))
+let pop stackin = (pops (fun g -> g.Emit(OpCodes.Pop))) stackin
 
-let dup (stack : 'x S S) = pushes stack (fun g -> g.Emit(OpCodes.Dup))
+let dup (_ : 'x S S) (_ : 'x S S S) (il : IL) = il.Generator.Emit(OpCodes.Dup)
 
-let ret (stack : E S S) (il : IL) =
+let ret (_ : E S S) (_ : 'x S) (il : IL) =
     il.Generator.Emit(OpCodes.Ret)
-    null : 'x S
 
-let ret'void (stack : E S) (il : IL) =
+let ret'void (_ : E S) (_ : 'x S) (il : IL) =
     il.Generator.Emit(OpCodes.Ret)
-    null : 'x S
 
 ////////////////////////////////////////
 // Loading constants
 ////////////////////////////////////////
 
-let ldnull stack =
-    pushes stack <| fun il -> il.Emit(OpCodes.Ldnull)
+let ldnull (_ : 'x S) (_ : 'x S S) (il : IL) =
+    il.Generator.Emit(OpCodes.Ldnull)
 
-let ldc'i4 (i : int) stack =
-    pushes stack <| fun il ->
+let ldc'i4 (i : int) =
+    pushes <| fun il ->
     match i with
     | -1 -> il.Emit(OpCodes.Ldc_I4_M1)
     | 0 -> il.Emit(OpCodes.Ldc_I4_0)
@@ -156,17 +142,17 @@ let ldc'i4 (i : int) stack =
     | s when s >= -128 && s < 128 -> il.Emit(OpCodes.Ldc_I4_S, sbyte s)
     | i -> il.Emit(OpCodes.Ldc_I4, i)
 
-let ldc'i8 (i : int64) stack =
-    pushes stack <| fun il -> il.Emit(OpCodes.Ldc_I8, i)
+let ldc'i8 (i : int64) =
+    pushes <| fun il -> il.Emit(OpCodes.Ldc_I8, i)
 
-let ldc'r4 (r : single) stack =
-    pushes stack <| fun il -> il.Emit(OpCodes.Ldc_R4, r)
+let ldc'r4 (r : single) =
+    pushes <| fun il -> il.Emit(OpCodes.Ldc_R4, r)
 
-let ldc'r8 (r : double) stack =
-    pushes stack <| fun il -> il.Emit(OpCodes.Ldc_R8, r)
+let ldc'r8 (r : double) =
+    pushes <| fun il -> il.Emit(OpCodes.Ldc_R8, r)
 
-let ldstr (s: string) stack =
-    pushes stack <| fun il -> il.Emit(OpCodes.Ldstr, s)
+let ldstr (s: string) =
+    pushes <| fun il -> il.Emit(OpCodes.Ldstr, s)
 
 ////////////////////////////////////////
 // Arithmetic and logic
@@ -211,7 +197,7 @@ let cgt'un stack = binop OpCodes.Cgt_Un stack
 let clt stack = binop OpCodes.Clt stack
 let clt'un stack = binop OpCodes.Clt_Un stack
 
-let ckfinite stack = pops stack <| fun il -> il.Emit(OpCodes.Ckfinite)
+let ckfinite stack = (pops <| fun il -> il.Emit(OpCodes.Ckfinite)) stack
 
 ////////////////////////////////////////
 // Conversion
@@ -261,14 +247,12 @@ let conv'r8 stack = unop OpCodes.Conv_R8 stack
 // Arrays
 ////////////////////////////////////////
 
-let newarr (elemTy : Type) stack (il : IL) =
-    il.Generator.Emit(OpCodes.Newarr, elemTy)
-    stack |> popped |> pushed
+let newarr (elemTy : Type) = pops1pushes1 (fun il -> il.Emit(OpCodes.Newarr, elemTy))
 
 let ldlen stack = unop OpCodes.Ldlen stack
 
 /// [array,index] -> [value]
-let ldelem (elemTy : Type) stack = pops2pushes1 stack <| fun il -> il.Emit(OpCodes.Ldelem, elemTy)
+let ldelem (elemTy : Type)  = pops2pushes1 <| fun il -> il.Emit(OpCodes.Ldelem, elemTy)
 let ldelem'i stack = binop OpCodes.Ldelem_I stack
 let ldelem'i1 stack = binop OpCodes.Ldelem_I1 stack
 let ldelem'i2 stack = binop OpCodes.Ldelem_I2 stack
@@ -281,25 +265,25 @@ let ldelem'u8 stack = binop OpCodes.Ldelem_I8 stack
 let ldelem'r4 stack = binop OpCodes.Ldelem_R4 stack
 let ldelem'r8 stack = binop OpCodes.Ldelem_R8 stack
 let ldelem'ref stack = binop OpCodes.Ldelem_Ref stack
-let ldelema (elemTy : Type) stack = pops2pushes1 stack <| fun il -> il.Emit(OpCodes.Ldelema, elemTy)
+let ldelema (elemTy : Type) = pops2pushes1 <| fun il -> il.Emit(OpCodes.Ldelema, elemTy)
 
 /// [array,index,value] -> []
-let stelem (ty : Type) stack = pops3 stack <| fun il -> il.Emit(OpCodes.Stelem, ty)
-let stelem'i stack = pops3 stack <| fun il -> il.Emit(OpCodes.Stelem_I)
-let stelem'i1 stack = pops3 stack <| fun il -> il.Emit(OpCodes.Stelem_I1)
-let stelem'i2 stack = pops3 stack <| fun il -> il.Emit(OpCodes.Stelem_I2)
-let stelem'i4 stack = pops3 stack <| fun il -> il.Emit(OpCodes.Stelem_I4)
-let stelem'i8 stack = pops3 stack <| fun il -> il.Emit(OpCodes.Stelem_I8)
-let stelem'r4 stack = pops3 stack <| fun il -> il.Emit(OpCodes.Stelem_R4)
-let stelem'r8 stack = pops3 stack <| fun il -> il.Emit(OpCodes.Stelem_R8)
-let stelem'ref stack = pops3 stack <| fun il -> il.Emit(OpCodes.Stelem_Ref)
+let stelem (ty : Type) = pops3 <| fun il -> il.Emit(OpCodes.Stelem, ty)
+let stelem'i stack = (pops3 <| fun il -> il.Emit(OpCodes.Stelem_I)) stack
+let stelem'i1 stack = (pops3 <| fun il -> il.Emit(OpCodes.Stelem_I1)) stack
+let stelem'i2 stack = (pops3 <| fun il -> il.Emit(OpCodes.Stelem_I2)) stack
+let stelem'i4 stack = (pops3 <| fun il -> il.Emit(OpCodes.Stelem_I4)) stack
+let stelem'i8 stack = (pops3 <| fun il -> il.Emit(OpCodes.Stelem_I8)) stack
+let stelem'r4 stack = (pops3 <| fun il -> il.Emit(OpCodes.Stelem_R4)) stack
+let stelem'r8 stack = (pops3 <| fun il -> il.Emit(OpCodes.Stelem_R8)) stack
+let stelem'ref stack = (pops3 <| fun il -> il.Emit(OpCodes.Stelem_Ref)) stack
 
 ////////////////////////////////////////
 // Arguments
 ////////////////////////////////////////
 
-let ldarg i stack =
-    pushes stack <| fun il ->
+let ldarg i =
+    pushes <| fun il ->
     match i with
     | 0 -> il.Emit(OpCodes.Ldarg_0)
     | 1 -> il.Emit(OpCodes.Ldarg_1)
@@ -308,14 +292,14 @@ let ldarg i stack =
     | s when s < 256 -> il.Emit(OpCodes.Ldarg_S, byte s)
     | i -> il.Emit(OpCodes.Ldarg, i)
 
-let ldarga i stack =
-    pushes stack <| fun il ->
+let ldarga i =
+    pushes <| fun il ->
     match i with
     | s when s < 256 -> il.Emit(OpCodes.Ldarga_S, byte s)
     | i -> il.Emit(OpCodes.Ldarga, i)
 
-let starg i stack =
-    pops stack <| fun il ->
+let starg i =
+    pops <| fun il ->
     match i with
     | s when s < 256 -> il.Emit(OpCodes.Starg_S, byte s)
     | i -> il.Emit(OpCodes.Starg, i)
@@ -324,12 +308,12 @@ let starg i stack =
 // Fields
 ////////////////////////////////////////
 
-let stfld (field : FieldInfo) stack = pops2 stack <| fun il -> il.Emit(OpCodes.Stfld, field)
-let stsfld (field : FieldInfo) stack = pops stack <| fun il -> il.Emit(OpCodes.Stsfld, field)
-let ldfld (field : FieldInfo) stack = pops1pushes1 stack <| fun il -> il.Emit(OpCodes.Ldfld, field)
-let ldsfld (field : FieldInfo) stack = pushes stack <| fun il -> il.Emit(OpCodes.Ldsfld, field)
-let ldflda (field : FieldInfo) stack = pops1pushes1 stack <| fun il -> il.Emit(OpCodes.Ldflda, field)
-let ldsflda (field : FieldInfo) stack = pushes stack <| fun il -> il.Emit(OpCodes.Ldsflda, field)
+let stfld (field : FieldInfo) = pops2 <| fun il -> il.Emit(OpCodes.Stfld, field)
+let stsfld (field : FieldInfo) = pops <| fun il -> il.Emit(OpCodes.Stsfld, field)
+let ldfld (field : FieldInfo) = pops1pushes1 <| fun il -> il.Emit(OpCodes.Ldfld, field)
+let ldsfld (field : FieldInfo) = pushes <| fun il -> il.Emit(OpCodes.Ldsfld, field)
+let ldflda (field : FieldInfo) = pops1pushes1 <| fun il -> il.Emit(OpCodes.Ldflda, field)
+let ldsflda (field : FieldInfo) = pushes <| fun il -> il.Emit(OpCodes.Ldsflda, field)
 
 ////////////////////////////////////////
 // Indirection
@@ -366,8 +350,8 @@ type LocalTemporary = internal | LocalTemporary of Type
 let deflocal ty = LocalDefinition ty
 let tmplocal ty = LocalTemporary ty
     
-let ldloc (local : LocalBuilder) stack =
-    pushes stack <| fun il ->
+let ldloc (local : LocalBuilder) =
+    pushes <| fun il ->
     match local.LocalIndex with
     | 0 -> il.Emit(OpCodes.Ldloc_0)
     | 1 -> il.Emit(OpCodes.Ldloc_1)
@@ -376,14 +360,14 @@ let ldloc (local : LocalBuilder) stack =
     | s when s < 256 -> il.Emit(OpCodes.Ldloc_S, byte s)
     | i -> il.Emit(OpCodes.Ldloc, int16 i)
 
-let ldloca (local : LocalBuilder) stack =
-    pushes stack <| fun il ->
+let ldloca (local : LocalBuilder) =
+    pushes <| fun il ->
     match local.LocalIndex with
     | s when s < 256 -> il.Emit(OpCodes.Ldloca_S, byte s)
     | i -> il.Emit(OpCodes.Ldloca, int16 i)
 
-let stloc (local : LocalBuilder) stack =
-    pops stack <| fun il ->
+let stloc (local : LocalBuilder) =
+    pops <| fun il ->
     match local.LocalIndex with
     | 0 -> il.Emit(OpCodes.Stloc_0)
     | 1 -> il.Emit(OpCodes.Stloc_1)
@@ -402,35 +386,30 @@ type LabelDefinition = internal | LabelDefinition
 
 let deflabel = LabelDefinition
 
-let mark (Label lbl : 'x Label) (stack : 'x S) (il : IL) =
+let mark (Label lbl : 'x Label) (_ : 'x S) (_ : 'x S) (il : IL) =
     il.Generator.MarkLabel(lbl)
-    stack
 
-let br (Label lbl : 'x Label) (stack : 'x S) (il : IL) =
+// don't enforce anything about the following stack
+// since we're jumping away unconditionally
+let br (Label lbl : 'x Label) (_ : 'x S) (_ : _ S) (il : IL) =
     il.Generator.Emit(OpCodes.Br, lbl)
-    // don't enforce anything about the following stack
-    // since we're jumping away unconditionally
-    null : 'b S
 
-let br's (Label lbl : 'x Label) (stack : 'x S) (il : IL) =
+let br's (Label lbl : 'x Label) (_ : 'x S) (_ : _ S) (il : IL) =
     il.Generator.Emit(OpCodes.Br_S, lbl)
-    null : 'b S
 
-let leave (Label lbl : E Label) (stack : 'x S) (il : IL) =
+let leave (Label lbl : E Label) (_ : 'x S) (_ : _ S) (il : IL) =
     il.Generator.Emit(OpCodes.Leave, lbl)
-    null : 'b S
 
-let leave's (Label lbl : E Label) (stack : 'x S) (il : IL) =
+let leave's (Label lbl : E Label) (_ : 'x S) (_ : _ S) (il : IL) =
     il.Generator.Emit(OpCodes.Leave, lbl)
-    null : 'b S
 
 /// Conditional branch that pops one element off the stack.
-let inline private cbr1 opcode (Label lbl : 'x Label) (stack : 'x S S) =
-    pops stack <| fun il -> il.Emit(opcode, lbl)
+let inline private cbr1 opcode (Label lbl : 'x Label) (_ : 'x S S) (_ : 'x S) (il : IL) =
+    il.Generator.Emit(opcode, lbl)
 
 /// Conditional branch that pops two elements off the stack.
-let inline private cbr2 opcode (Label lbl : 'x Label) (stack : 'x S S S) =
-    pops2 stack <| fun il -> il.Emit(opcode, lbl)
+let inline private cbr2 opcode (Label lbl : 'x Label) (_ : 'x S S S) (_ : 'x S) (il : IL) =
+    il.Generator.Emit(opcode, lbl)
 
 let brtrue label = cbr1 OpCodes.Brtrue label
 let brtrue's label = cbr1 OpCodes.Brtrue_S label
@@ -464,59 +443,57 @@ let blt's label = cbr2 OpCodes.Blt_S label
 let blt'un label = cbr2 OpCodes.Blt_Un label
 let blt'un's label = cbr2 OpCodes.Blt_Un_S label
 
-let switch (labels : 'x Label seq) (stack : 'x S S) =
+let switch (labels : 'x Label seq) (_ : 'y S S) (_ : 'x S) (il : IL) =
     let labels = [| for Label lbl in labels -> lbl |]
-    pops stack <| fun il -> il.Emit(OpCodes.Switch, labels)
+    il.Generator.Emit(OpCodes.Switch, labels)
 
 ////////////////////////////////////////
 // Type system
 ////////////////////////////////////////
 
-let ldtoken (ty : Type) stack = pushes stack <| fun il -> il.Emit(OpCodes.Ldtoken, ty)
-let ldftn (meth : MethodInfo) stack = pushes stack <| fun il -> il.Emit(OpCodes.Ldftn, meth)
-let ldvirtftn (meth : MethodInfo) stack = pops1pushes1 stack <| fun il -> il.Emit(OpCodes.Ldvirtftn, meth)
-let box'val (ty : Type) stack = pops1pushes1 stack <| fun il -> il.Emit(OpCodes.Box, ty)
-let unbox'any (ty : Type) stack = pops1pushes1 stack <| fun il -> il.Emit(OpCodes.Unbox_Any, ty)
-let unbox'val (ty : Type) stack = pops1pushes1 stack <| fun il -> il.Emit(OpCodes.Unbox, ty)
-let castclass (ty : Type) stack = pops1pushes1 stack <| fun il -> il.Emit(OpCodes.Castclass, ty)
-let isinst (ty : Type) stack = pops1pushes1 stack <| fun il -> il.Emit(OpCodes.Isinst, ty)
-let refanyval (ty : Type) stack = pops1pushes1 stack <| fun il -> il.Emit(OpCodes.Refanyval, ty)
-let refanytype stack = pops1pushes1 stack <| fun il -> il.Emit(OpCodes.Refanytype)
-let initobj (ty : Type) stack = pops stack <| fun il -> il.Emit(OpCodes.Initobj, ty)
-let mkrefany (ty : Type) stack = pops1pushes1 stack <| fun il -> il.Emit(OpCodes.Mkrefany, ty)
+let ldtoken (ty : Type) = pushes <| fun il -> il.Emit(OpCodes.Ldtoken, ty)
+let ldftn (meth : MethodInfo) = pushes <| fun il -> il.Emit(OpCodes.Ldftn, meth)
+let ldvirtftn (meth : MethodInfo) = pops1pushes1 <| fun il -> il.Emit(OpCodes.Ldvirtftn, meth)
+let box'val (ty : Type) = pops1pushes1 <| fun il -> il.Emit(OpCodes.Box, ty)
+let unbox'any (ty : Type) = pops1pushes1 <| fun il -> il.Emit(OpCodes.Unbox_Any, ty)
+let unbox'val (ty : Type) = pops1pushes1 <| fun il -> il.Emit(OpCodes.Unbox, ty)
+let castclass (ty : Type) = pops1pushes1 <| fun il -> il.Emit(OpCodes.Castclass, ty)
+let isinst (ty : Type) = pops1pushes1 <| fun il -> il.Emit(OpCodes.Isinst, ty)
+let refanyval (ty : Type) = pops1pushes1 <| fun il -> il.Emit(OpCodes.Refanyval, ty)
+let refanytype stack = (pops1pushes1 <| fun il -> il.Emit(OpCodes.Refanytype)) stack
+let initobj (ty : Type) = pops <| fun il -> il.Emit(OpCodes.Initobj, ty)
+let mkrefany (ty : Type) = pops1pushes1 <| fun il -> il.Emit(OpCodes.Mkrefany, ty)
 
 ////////////////////////////////////////
 // Exception stuff
 ////////////////////////////////////////
 
-let endfilter stack = pops stack <| fun il -> il.Emit(OpCodes.Endfilter)
-let endfinally stack = nops stack <| fun il -> il.Emit(OpCodes.Endfinally)
-let rethrow stack = nops stack <| fun il -> il.Emit(OpCodes.Rethrow)
-let throw (stack : 'x S S) (il : IL) =
+let endfilter stack = (pops <| fun il -> il.Emit(OpCodes.Endfilter)) stack
+let endfinally stack = (nops <| fun il -> il.Emit(OpCodes.Endfinally)) stack
+let rethrow stack = (nops <| fun il -> il.Emit(OpCodes.Rethrow)) stack
+let throw (_ : 'x S S) (_ : _ S) (il : IL) =
     il.Generator.Emit(OpCodes.Throw)
-    null : 'y S
 
 ////////////////////////////////////////
 // Weird stuff and memory operations
 ////////////////////////////////////////
 
-let arglist stack = pushes stack <| fun il -> il.Emit(OpCodes.Arglist)
-let cpblk stack = pops3 stack <| fun il -> il.Emit(OpCodes.Cpblk)
-let stobj (ty : Type) stack = pops2 stack <| fun il -> il.Emit(OpCodes.Stobj, ty)
-let ldobj (ty : Type) stack = pops1pushes1 stack <| fun il -> il.Emit(OpCodes.Ldobj, ty)
-let cpobj (ty : Type) stack = pops2 stack <| fun il -> il.Emit(OpCodes.Cpobj, ty)
-let sizeof (ty : Type) stack = pushes stack <| fun il -> il.Emit(OpCodes.Sizeof, ty)
-let jmp (meth : MethodInfo) (stack : E S) (il : IL) =
+let arglist stack = (pushes <| fun il -> il.Emit(OpCodes.Arglist)) stack
+let cpblk stack = (pops3 <| fun il -> il.Emit(OpCodes.Cpblk)) stack
+let stobj (ty : Type) = pops2 <| fun il -> il.Emit(OpCodes.Stobj, ty)
+let ldobj (ty : Type) = pops1pushes1 <| fun il -> il.Emit(OpCodes.Ldobj, ty)
+let cpobj (ty : Type) = pops2 <| fun il -> il.Emit(OpCodes.Cpobj, ty)
+let sizeof (ty : Type) = pushes <| fun il -> il.Emit(OpCodes.Sizeof, ty)
+let jmp (meth : MethodInfo) (_ : E S) (_ : E S) (il : IL) =
     il.Generator.Emit(OpCodes.Jmp, meth)
-    empty
-let localloc stack = unop OpCodes.Localloc stack
-let initblk stack = pops3 stack <| fun il -> il.Emit(OpCodes.Initblk)
+let localloc stack = (unop OpCodes.Localloc) stack
+let initblk stack = (pops3 <| fun il -> il.Emit(OpCodes.Initblk)) stack
 
 ////////////////////////////////////////
 // Prefixes
 ////////////////////////////////////////
 
-let constrained (ty : Type) stack = nops stack <| fun il -> il.Emit(OpCodes.Constrained, ty)
-let tail stack = nops stack <| fun il -> il.Emit(OpCodes.Tailcall)
-let unaligned (stack : 'x S S) = nops stack <| fun il -> il.Emit(OpCodes.Unaligned)
-let volatile' (stack : 'x S S) = nops stack <| fun il -> il.Emit(OpCodes.Volatile)
+let constrained (ty : Type) = nops <| fun il -> il.Emit(OpCodes.Constrained, ty)
+let tail stack = (nops <| fun il -> il.Emit(OpCodes.Tailcall)) stack
+let unaligned stack = (pops1pushes1 <| fun il -> il.Emit(OpCodes.Unaligned)) stack
+let volatile' stack = (pops1pushes1 <| fun il -> il.Emit(OpCodes.Volatile)) stack

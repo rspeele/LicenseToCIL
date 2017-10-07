@@ -37,7 +37,7 @@ type private SwitchGroup<'stackin, 'stackout> =
             yield mark exit
         }
     member this.SwitchCode() : Op<'stackin S, 'stackout> =
-        fun _ il ->
+        fun _ _ il ->
             let exit = il.Generator.DefineLabel()
             let defaultCase = il.Generator.DefineLabel()
             let minimum = this.Minimum
@@ -54,7 +54,7 @@ type private SwitchGroup<'stackin, 'stackout> =
                 (cil {
                     yield ldc'i4 minimum
                     yield sub
-                }) null il |> ignore
+                }) null null il
             il.Generator.Emit(OpCodes.Switch, labels)
             (cil {
                 let defaultCase = Label defaultCase
@@ -68,8 +68,8 @@ type private SwitchGroup<'stackin, 'stackout> =
                 yield mark defaultCase
                 yield this.Default
                 yield mark exit
-            }) null il |> ignore
-            null
+            }) null null il
+            ()
             
                 
 // Allow a gap of one unused label in between switch cases.

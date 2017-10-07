@@ -18,7 +18,7 @@ val inline combine : Op<'i, 'm> -> (unit -> Op<'m, 'e>) -> Op<'i, 'e>
 /// Emit no instructions and retain stack state.
 val inline zero : Op<'x, 'x>
 /// Force the stack state to appear as desired to the type checker.
-val inline pretend<'x, 'y> : S<'x> -> IL -> S<'y>
+val inline pretend : Op<'x, 'y>
 
 /// Define a new local, e.g. `let! loc = deflocal typeof<int>`.
 val deflocal : Type -> LocalDefinition
@@ -489,7 +489,7 @@ val sub'ovf : Op<'x S S, 'x S>
 /// [_, value1, value2 --> _, result] Subtract unsigned native value2 from value1 with overflow check, returning a new value.
 val sub'ovf'un : Op<'x S S, 'x S>
 /// [_, n --> _] Jump to nth label in table, or fall through to next instruction if n is out of range.
-val switch : 'x Label seq -> Op<'x S, 'x>
+val switch : 'x Label seq -> Op<'y S, 'x>
 /// [_, _] Mark following call as a tail call.
 val tail : Op<'x, 'x>
 /// [_, exn --> _] Throw an exception.
