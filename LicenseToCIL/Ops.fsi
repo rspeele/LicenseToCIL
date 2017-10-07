@@ -9,9 +9,12 @@ open System.Reflection.Emit
 type Local = LocalBuilder
 type Label<'stack> = Label of Label
 
-type LabelDefinition = internal | LabelDefinition
-type LocalDefinition = internal | LocalDefinition of Type
-type LocalTemporary = internal | LocalTemporary of Type
+type LabelDefinition =
+    | LabelDefinition
+type LocalDefinition =
+    | LocalDefinition of Type
+type LocalTemporary =
+    | LocalTemporary of Type
 
 type CILHelpers =
     class

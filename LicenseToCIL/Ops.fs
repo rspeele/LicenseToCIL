@@ -337,8 +337,11 @@ let inline ldind'u4 (_ : 'x S S) (_ : 'x S S) (il : IL) = il.Emit(OpCodes.Ldind_
 // Locals
 ////////////////////////////////////////
 
-type LocalDefinition = internal | LocalDefinition of Type
-type LocalTemporary = internal | LocalTemporary of Type
+type LocalDefinition =
+    | LocalDefinition of Type
+
+type LocalTemporary =
+    | LocalTemporary of Type
 
 let deflocal ty = LocalDefinition ty
 let tmplocal ty = LocalTemporary ty
@@ -355,7 +358,8 @@ let inline stloc (local : LocalBuilder) (_ : 'x S S) (_ : 'x S) (il : IL) = CILH
 
 type Label<'stack> = Label of Label
 
-type LabelDefinition = internal | LabelDefinition
+type LabelDefinition =
+    | LabelDefinition
 
 let deflabel = LabelDefinition
 
