@@ -41,6 +41,10 @@ let example() =
         yield add
         yield ldc'i4 3
         yield add
+        yield ldc'i4 4
+        yield add
+        yield ldc'i4 5
+        yield add
     }
 
 let cilIterativeFactorial =
