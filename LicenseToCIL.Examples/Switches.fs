@@ -5,7 +5,7 @@ open LicenseToCIL
 open LicenseToCIL.Ops
 open Microsoft.VisualStudio.TestTools.UnitTesting
     
-let integerSwitch =
+let integerSwitch() =
     cil {
         yield ldarg 0
         yield Switch.cases
@@ -28,7 +28,7 @@ let integerSwitch =
         yield ret
     } |> toDelegate<Func<int, string>> "cilIntegerSwitch"
 
-let digits =
+let digits() =
     [
         "zero", 0
         "one", 1
@@ -70,10 +70,10 @@ let fsStringSwitchCI str =
     else -1
 
 // replicates IL from F# switch
-let stringSwitchIfElse =
+let stringSwitchIfElse() =
     let equals = typeof<string>.GetMethod("Equals", [|typeof<string>; typeof<string>|])
     cil {
-        for str, i in digits do
+        for str, i in digits() do
             let! next = deflabel
             yield ldarg 0
             yield ldstr str
@@ -86,16 +86,6 @@ let stringSwitchIfElse =
         yield ret
     } |> toDelegate<Func<string, int>> "cilStringIfElse"
 
-let private ciDict =
-    let dict = new System.Collections.Generic.Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
-    for str, d in digits do
-        dict.Add(str, d)
-    dict
-
-let fsStringSwitchDictCI str =
-    let mutable i = -1
-    if ciDict.TryGetValue(str, &i) then i else -1
-
 let stringSwitchBy meth options name =
     cil {
         yield ldarg 0
@@ -107,17 +97,17 @@ let stringSwitchBy meth options name =
         yield ret
     } |> toDelegate<Func<string, int>> name
 
-let stringSwitch = stringSwitchBy StringSwitch.sensitive digits "cilStringSwitch"
+let stringSwitch() = stringSwitchBy StringSwitch.sensitive (digits()) "cilStringSwitch"
 
-let stringSwitchCI = stringSwitchBy StringSwitch.insensitive digits "cilStringSwitchCI"
+let stringSwitchCI() = stringSwitchBy StringSwitch.insensitive (digits()) "cilStringSwitchCI"
 
-let stringSwitchHash = stringSwitchBy StringSwitch.sensitiveByHash digits "cilStringSwitchHash"
+let stringSwitchHash() = stringSwitchBy StringSwitch.sensitiveByHash (digits()) "cilStringSwitchHash"
 
-let stringSwitchHashCI = stringSwitchBy StringSwitch.insensitiveByHash digits "cilStringSwitchHashCI"
+let stringSwitchHashCI() = stringSwitchBy StringSwitch.insensitiveByHash (digits()) "cilStringSwitchHashCI"
 
-let stringSwitchBinary = stringSwitchBy StringSwitch.sensitiveBinary digits "cilStringSwitchBinary"
+let stringSwitchBinary() = stringSwitchBy StringSwitch.sensitiveBinary (digits()) "cilStringSwitchBinary"
 
-let stringSwitchBinaryCI = stringSwitchBy StringSwitch.insensitiveBinary digits "cilStringSwitchBinaryCI"
+let stringSwitchBinaryCI() = stringSwitchBy StringSwitch.insensitiveBinary (digits()) "cilStringSwitchBinaryCI"
 
 let bench options name (f : Func<string, int>) =
     let sw = new Stopwatch()
@@ -173,29 +163,38 @@ type TestSwitches() =
                 -102, "negative one hundred and two"
                 -103, "default"
                 -120, "default"
-            ] do Assert.AreEqual(expected, integerSwitch.Invoke(input))
+            ] do Assert.AreEqual(expected, integerSwitch().Invoke(input))
 
     [<TestMethod>]
     member __.TestStringSwitch() =
-        for input, expected in digits do
-            Assert.AreEqual(expected, stringSwitch.Invoke(input))
+        for input, expected in (digits()) do
+            Assert.AreEqual(expected, stringSwitch().Invoke(input))
 
     [<TestMethod>]
     member __.TestStringSwitchPerformance() =
-        let fs = bench digits "F#" (Func<string,int>(fsStringSwitch))
-        let ifElse = bench digits "If/Else" stringSwitchIfElse
-        let gen = bench digits "Switch" stringSwitch
-        let genH = bench digits "Switch Hash" stringSwitchHash
-        let benB = bench digits "Switch Binary" stringSwitchBinary
+        let fs = bench (digits()) "F#" (Func<string,int>(fsStringSwitch))
+        let ifElse = bench (digits()) "If/Else" (stringSwitchIfElse())
+        let gen = bench (digits()) "Switch" (stringSwitch())
+        let genH = bench (digits()) "Switch Hash" (stringSwitchHash())
+        let benB = bench (digits()) "Switch Binary" (stringSwitchBinary())
         if gen > int64 (double fs * 1.1) then failwith "Generated switch much slower than if/else"
 
     [<TestMethod>]
     member __.TestStringSwitchPerformanceCI() =
-        let fs = benchCI digits "F#" (Func<string,int>(fsStringSwitchCI))
-        let fsDict = benchCI digits "F# dict" (Func<string,int>(fsStringSwitchDictCI))
-        let gen = benchCI digits "Switch" stringSwitchCI
-        let genH = benchCI digits "Switch Hash" stringSwitchHashCI
-        let genB = benchCI digits "Switch Binary" stringSwitchBinaryCI
+        let ciDict =
+            let dict = new System.Collections.Generic.Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+            for str, d in digits() do
+                dict.Add(str, d)
+            dict
+
+        let fsStringSwitchDictCI str =
+            let mutable i = -1
+            if ciDict.TryGetValue(str, &i) then i else -1
+        let fs = benchCI (digits()) "F#" (Func<string,int>(fsStringSwitchCI))
+        let fsDict = benchCI (digits()) "F# dict" (Func<string,int>(fsStringSwitchDictCI))
+        let gen = benchCI (digits()) "Switch" (stringSwitchCI())
+        let genH = benchCI (digits()) "Switch Hash" (stringSwitchHashCI())
+        let genB = benchCI (digits()) "Switch Binary" (stringSwitchBinaryCI())
         if gen > int64 (double fs * 1.1) then failwith "Generated switch much slower than chain of insensitive compares"
 
     [<TestMethod>]
