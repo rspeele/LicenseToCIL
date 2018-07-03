@@ -291,3 +291,9 @@ type TestSwitches() =
             benchCI names "Switch Hash CI" stringSwitchHashCI
             benchCI names "Switch Binary CI" stringSwitchBinaryCI
         ] |> ignore
+
+module Main =
+    [<EntryPoint>]
+    let main argv =
+        printfn "don't run me this way ya goober"
+        0
