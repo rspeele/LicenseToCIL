@@ -2,10 +2,16 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <Authors>Robert Peele</Authors>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/rspeele/LicenseToCIL/master/README.md</PackageLicenseUrl>
+    <Copyright>Copyright 2016 Robert Peele</Copyright>
+    <PackageTags>fsharp f# cil msil il emit reflection</PackageTags>
+    <PackageProjectUrl>https://github.com/rspeele/LicenseToCIL</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/rspeele/LicenseToCIL</RepositoryUrl>
+    <PackageReleaseNotes>Target .NET standard 2.0.</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="LicenseToCIL.nuspec" />
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Stack.fs" />
     <Compile Include="IL.fs" />
