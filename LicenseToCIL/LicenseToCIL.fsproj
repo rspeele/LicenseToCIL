@@ -9,6 +9,7 @@
     <PackageProjectUrl>https://github.com/rspeele/LicenseToCIL</PackageProjectUrl>
     <RepositoryUrl>https://github.com/rspeele/LicenseToCIL</RepositoryUrl>
     <PackageReleaseNotes>Target .NET standard 2.0.</PackageReleaseNotes>
+    <DocumentationFile>LicenseToCIL.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

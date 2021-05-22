@@ -159,7 +159,7 @@ let inline ldc'r4 (r : single) (_ : 'x S) (_ : 'x S S) (il : IL) = il.EmitSingle
 
 let inline ldc'r8 (r : double) (_ : 'x S) (_ : 'x S S) (il : IL) = il.EmitDouble(OpCodes.Ldc_R8, r)
 
-let inline ldstr (s : string) (_ : 'x S) (_ : 'x S S) (il : IL) = il.EmitString(OpCodes.Ldstr, s)
+let inline ldstr (str : string) (_ : 'x S) (_ : 'x S S) (il : IL) = il.EmitString(OpCodes.Ldstr, str)
 
 ////////////////////////////////////////
 // Arithmetic and logic
@@ -274,10 +274,10 @@ let inline ldelem'u8 (_ : 'x S S S) (_ : 'x S S) (il : IL) = il.Emit(OpCodes.Lde
 let inline ldelem'r4 (_ : 'x S S S) (_ : 'x S S) (il : IL) = il.Emit(OpCodes.Ldelem_R4)
 let inline ldelem'r8 (_ : 'x S S S) (_ : 'x S S) (il : IL) = il.Emit(OpCodes.Ldelem_R8)
 let inline ldelem'ref (_ : 'x S S S) (_ : 'x S S) (il : IL) = il.Emit(OpCodes.Ldelem_Ref)
-let inline ldelema (elemTy : Type) (_ : 'x S S S) (_ : 'x S S) (il : IL) = il.EmitTy(OpCodes.Ldelema, elemTy)
+let inline ldelema (ty : Type) (_ : 'x S S S) (_ : 'x S S) (il : IL) = il.EmitTy(OpCodes.Ldelema, ty)
 
 /// [array,index,value] -> []
-let inline stelem (ty : Type) (_ : 'x S S S S) (_ : 'x S) (il : IL) = il.EmitTy(OpCodes.Stelem, ty)
+let inline stelem (elemTy : Type) (_ : 'x S S S S) (_ : 'x S) (il : IL) = il.EmitTy(OpCodes.Stelem, elemTy)
 let inline stelem'i (_ : 'x S S S S) (_ : 'x S) (il : IL) = il.Emit(OpCodes.Stelem_I)
 let inline stelem'i1 (_ : 'x S S S S) (_ : 'x S) (il : IL) = il.Emit(OpCodes.Stelem_I1)
 let inline stelem'i2 (_ : 'x S S S S) (_ : 'x S) (il : IL) = il.Emit(OpCodes.Stelem_I2)
@@ -291,11 +291,11 @@ let inline stelem'ref (_ : 'x S S S S) (_ : 'x S) (il : IL) = il.Emit(OpCodes.St
 // Arguments
 ////////////////////////////////////////
 
-let inline ldarg i (_ : 'x S) (_ : 'x S S) (il : IL) = CILHelpers.LdArg(i, il)
+let inline ldarg num (_ : 'x S) (_ : 'x S S) (il : IL) = CILHelpers.LdArg(num, il)
 
-let inline ldarga i (_ : 'x S) (_ : 'x S S) (il : IL) = CILHelpers.LdArgA(i, il)
+let inline ldarga num (_ : 'x S) (_ : 'x S S) (il : IL) = CILHelpers.LdArgA(num, il)
 
-let inline starg i (_ : 'x S S) (_ : 'x S) (il : IL) = CILHelpers.StArg(i, il)
+let inline starg num (_ : 'x S S) (_ : 'x S) (il : IL) = CILHelpers.StArg(num, il)
 
 ////////////////////////////////////////
 // Fields
@@ -422,10 +422,10 @@ let inline switch (labels : 'x Label seq) (_ : 'x S S) (_ : 'x S) (il : IL) =
 let inline ldtoken (ty : Type) (_ : 'x S) (_ : 'x S S) (il : IL) = il.EmitTy(OpCodes.Ldtoken, ty)
 let inline ldftn (meth : MethodInfo) (_ : 'x S) (_ : 'x S S) (il : IL) = il.EmitMethod(OpCodes.Ldftn, meth)
 let inline ldvirtftn (meth : MethodInfo) (_ : 'x S S) (_ : 'x S S) (il : IL) = il.EmitMethod(OpCodes.Ldvirtftn, meth)
-let inline box'val (ty : Type) (_ : 'x S S) (_ : 'x S S) (il : IL) = il.EmitTy(OpCodes.Box, ty)
+let inline box'val (valueTy : Type) (_ : 'x S S) (_ : 'x S S) (il : IL) = il.EmitTy(OpCodes.Box, valueTy)
 let inline unbox'any (ty : Type) (_ : 'x S S) (_ : 'x S S) (il : IL) = il.EmitTy(OpCodes.Unbox_Any, ty)
-let inline unbox'val (ty : Type) (_ : 'x S S) (_ : 'x S S) (il : IL) = il.EmitTy(OpCodes.Unbox, ty)
-let inline castclass (ty : Type) (_ : 'x S S) (_ : 'x S S) (il : IL) = il.EmitTy(OpCodes.Castclass, ty)
+let inline unbox'val (valueTy : Type) (_ : 'x S S) (_ : 'x S S) (il : IL) = il.EmitTy(OpCodes.Unbox, valueTy)
+let inline castclass (toTy : Type) (_ : 'x S S) (_ : 'x S S) (il : IL) = il.EmitTy(OpCodes.Castclass, toTy)
 let inline isinst (ty : Type) (_ : 'x S S) (_ : 'x S S) (il : IL) = il.EmitTy(OpCodes.Isinst, ty)
 let inline refanyval (ty : Type) (_ : 'x S S) (_ : 'x S S) (il : IL) = il.EmitTy(OpCodes.Refanyval, ty)
 let inline refanytype (_ : 'x S S) (_ : 'x S S) (il : IL) = il.Emit(OpCodes.Refanytype)
@@ -450,7 +450,7 @@ let inline cpblk (_ : 'x S S S S) (_ : 'x S) (il : IL) = il.Emit(OpCodes.Cpblk)
 let inline stobj (ty : Type) (_ : 'x S S S) (_ : 'x S) (il : IL) = il.EmitTy(OpCodes.Stobj, ty)
 let inline ldobj (ty : Type) (_ : 'x S S) (_ : 'x S S) (il : IL) = il.EmitTy(OpCodes.Ldobj, ty)
 let inline cpobj (ty : Type) (_ : 'x S S S) (_ : 'x S) (il : IL) = il.EmitTy(OpCodes.Cpobj, ty)
-let inline sizeof (ty : Type) (_ : 'x S) (_ : 'x S S) (il : IL) = il.EmitTy(OpCodes.Sizeof, ty)
+let inline sizeof (valueTy : Type) (_ : 'x S) (_ : 'x S S) (il : IL) = il.EmitTy(OpCodes.Sizeof, valueTy)
 let inline jmp (meth : MethodInfo) (_ : E S) (_ : E S) (il : IL) = il.EmitMethod(OpCodes.Jmp, meth)
 let inline localloc (_ : 'x S S) (_ : 'x S S) (il : IL) = il.Emit(OpCodes.Localloc)
 let inline initblk (_ : 'x S S S S) (_ : 'x S) (il : IL) = il.Emit(OpCodes.Initblk)
