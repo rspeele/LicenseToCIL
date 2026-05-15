@@ -163,12 +163,12 @@ type TestSwitches() =
                 -102, "negative one hundred and two"
                 -103, "default"
                 -120, "default"
-            ] do Assert.AreEqual(expected, integerSwitch().Invoke(input))
+            ] do Assert.AreEqual<string>(expected, integerSwitch().Invoke(input))
 
     [<TestMethod>]
     member __.TestStringSwitch() =
         for input, expected in (digits()) do
-            Assert.AreEqual(expected, stringSwitch().Invoke(input))
+            Assert.AreEqual<int>(expected, stringSwitch().Invoke(input))
 
     [<TestMethod>]
     member __.TestStringSwitchPerformance() =

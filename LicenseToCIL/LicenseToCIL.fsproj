@@ -1,14 +1,17 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
     <Authors>Robert Peele</Authors>
-    <PackageLicenseUrl>https://raw.githubusercontent.com/rspeele/LicenseToCIL/master/README.md</PackageLicenseUrl>
+    <Description>A library for emitting CIL using F# computation expressions.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Copyright>Copyright 2016 Robert Peele</Copyright>
     <PackageTags>fsharp f# cil msil il emit reflection</PackageTags>
     <PackageProjectUrl>https://github.com/rspeele/LicenseToCIL</PackageProjectUrl>
     <RepositoryUrl>https://github.com/rspeele/LicenseToCIL</RepositoryUrl>
-    <PackageReleaseNotes>Target .NET standard 2.0.</PackageReleaseNotes>
+    <PackageReleaseNotes>Target netstandard2.0 and net8.0; bump FSharp.Core.</PackageReleaseNotes>
+    <Version>1.1.0</Version>
+    <DisableImplicitFSharpCoreReference>true</DisableImplicitFSharpCoreReference>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,11 +27,16 @@
     <Compile Include="Delegates.fs" />
   </ItemGroup>
 
-  <ItemGroup />
-
   <ItemGroup>
-    <PackageReference Include="System.Reflection.Emit.ILGeneration" Version="4.3.0" />
-    <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
+    <PackageReference Include="FSharp.Core" Version="8.0.401" />
+  </ItemGroup>
+
+  <!-- TypeBuilder / DynamicMethod / LocalBuilder are not in the netstandard2.0 BCL surface,
+       so we still need the System.Reflection.Emit reference packages for that target. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="System.Reflection.Emit" Version="4.7.0" />
+    <PackageReference Include="System.Reflection.Emit.ILGeneration" Version="4.7.0" />
+    <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
   </ItemGroup>
 
 </Project>
