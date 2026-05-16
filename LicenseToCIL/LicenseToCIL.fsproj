@@ -9,10 +9,15 @@
     <PackageTags>fsharp f# cil msil il emit reflection</PackageTags>
     <PackageProjectUrl>https://github.com/rspeele/LicenseToCIL</PackageProjectUrl>
     <RepositoryUrl>https://github.com/rspeele/LicenseToCIL</RepositoryUrl>
-    <PackageReleaseNotes>Target netstandard2.0 and net8.0; bump FSharp.Core.</PackageReleaseNotes>
+    <PackageReleaseNotes>Modernized for the 2026 .NET ecosystem. Multi-targets netstandard2.0, net8.0, and net10.0 with FSharp.Core 8.0.401+. No API changes.</PackageReleaseNotes>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <Version>1.1.1</Version>
     <DisableImplicitFSharpCoreReference>true</DisableImplicitFSharpCoreReference>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
